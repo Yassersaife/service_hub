@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../models/service_provider.dart';
 import '../utils/app_colors.dart';
+import 'rating_stars.dart';
+import '../screens/provider_profile_screen.dart';
 
 class ServiceProviderCard extends StatelessWidget {
   final ServiceProvider provider;
@@ -15,188 +16,253 @@ class ServiceProviderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProviderProfileScreen(
+              provider: provider,
+            ),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // الهيدر
-          Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  provider.getServiceIcon(),
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-
-              const SizedBox(width: 16),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      provider.name,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: Colors.grey.shade100,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // الهيدر
+            Row(
+              children: [
+                // صورة البروفايل
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.2),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
                       ),
+                    ],
+                  ),
+                  child: provider.profileImage != null
+                      ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      provider.profileImage!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildDefaultAvatar(),
                     ),
+                  )
+                      : _buildDefaultAvatar(),
+                ),
+
+                const SizedBox(width: 12),
+
+                // المعلومات الأساسية
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // الاسم
+                      Text(
+                        provider.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      // نوع الخدمة
+                      Text(
+                        provider.getServiceLabel(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      // التقييم
+                      Row(
+                        children: [
+                          RatingStars(
+                            rating: provider.rating,
+                            size: 12,
+                            showRating: false,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${provider.rating}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF374151),
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '(${provider.reviewsCount})',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Color(0xFF9CA3AF),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // شارة التوثيق
+                if (provider.isVerified)
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(
+                      Icons.verified,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // المعلومات السفلية
+            Row(
+              children: [
+                // الموقع
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          provider.city,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // الخبرة
+                Row(
+                  children: [
+                    Icon(
+                      Icons.work_history,
+                      size: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
-                      provider.getServiceLabel(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                      provider.getExperienceText(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-          // المعلومات
-          _buildInfoRow(Icons.location_on, provider.city),
-          const SizedBox(height: 8),
-          _buildInfoRow(Icons.phone, provider.phone),
-
-          if (provider.email != null && provider.email!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _buildInfoRow(Icons.email, provider.email!),
-          ],
-
-          if (provider.description != null &&
-              provider.description!.isNotEmpty) ...[
-            const SizedBox(height: 16),
+            // مؤشر الضغط
             Container(
-              padding: const EdgeInsets.all(12),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: AppColors.primary.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                provider.description!,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF64748B),
-                  height: 1.4,
-                ),
-              ),
-            ),
-          ],
-
-          // أزرار التواصل
-          if (showContactButtons) ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildContactButton(
-                    'اتصال',
-                    Icons.phone,
-                    AppColors.primaryGradient,
-                        () => _makePhoneCall(provider.phone),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: AppColors.primary.withOpacity(0.7),
                   ),
-                ),
-
-                if (provider.email != null && provider.email!.isNotEmpty) ...[
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildContactButton(
-                      'إيميل',
-                      Icons.email,
-                      AppColors.secondaryGradient,
-                          () => print(''),
+                  const SizedBox(width: 6),
+                  Text(
+                    'عرض التفاصيل',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.primary.withOpacity(0.8),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: const Color(0xFF64748B),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF64748B),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildContactButton(String text,
-      IconData icon,
-      Gradient gradient,
-      VoidCallback onPressed,) {
+  Widget _buildDefaultAvatar() {
     return Container(
       decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withOpacity(0.8),
+            AppColors.primary,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 16, color: Colors.white),
-        label: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
+      child: Icon(
+        provider.getServiceIcon(),
+        color: Colors.white,
+        size: 24,
       ),
     );
-  }
-
-  void _makePhoneCall(String phoneNumber) async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(phoneUri)) {
-      await launchUrl(phoneUri);
-    }
   }
 }
