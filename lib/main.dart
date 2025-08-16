@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:service_hub/features/service_provider/services/provider_service.dart';
 import 'screens/welcome_screen.dart';
 
 void main() {
+  ProviderService().initializeDummyData();
   runApp(const ProConnectApp());
 }
 

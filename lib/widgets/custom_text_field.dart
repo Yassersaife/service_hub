@@ -1,3 +1,4 @@
+// lib/widgets/custom_text_field.dart - Updated version
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 
@@ -5,22 +6,26 @@ class CustomTextField extends StatelessWidget {
   final String label;
   final String hint;
   final IconData? icon;
-  final TextEditingController controller;
+  final TextEditingController? controller;
   final bool required;
   final TextInputType? keyboardType;
   final int maxLines;
   final Function(String)? onChanged;
+  final bool obscureText;
+  final Widget? suffixIcon;
 
   const CustomTextField({
     super.key,
     required this.label,
     required this.hint,
-    required this.controller,
+    this.controller,
     this.icon,
     this.required = false,
     this.keyboardType,
     this.maxLines = 1,
     this.onChanged,
+    this.obscureText = false,
+    this.suffixIcon,
   });
 
   @override
@@ -56,9 +61,11 @@ class CustomTextField extends StatelessWidget {
           keyboardType: keyboardType,
           maxLines: maxLines,
           onChanged: onChanged,
+          obscureText: obscureText,
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: icon != null ? Icon(icon) : null,
+            suffixIcon: suffixIcon,
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -92,3 +99,9 @@ class CustomTextField extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+

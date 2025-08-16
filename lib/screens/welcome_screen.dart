@@ -1,3 +1,4 @@
+// lib/screens/welcome_screen.dart - Updated
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import 'user_type_screen.dart';
@@ -121,7 +122,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           const SizedBox(height: 16),
 
                           const Text(
-                            'منصة ربط مقدمي الخدمات مع العملاء',
+                            'منصة ربط مقدمي الخدمات مع العملاء\nابحث عن الخدمة أو قدم خدمتك',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 18,
@@ -186,3 +187,4 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     );
   }
 }
+

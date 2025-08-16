@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
-import 'service_provider_form_screen.dart';
-import 'customer_services_screen.dart';
+import '../features/auth/screens/signup_screen.dart';
+import '../features/customer/screens/customer_services_screen.dart';
 
 class UserTypeScreen extends StatefulWidget {
   const UserTypeScreen({super.key});
@@ -65,16 +65,17 @@ class _UserTypeScreenState extends State<UserTypeScreen>
                   children: [
                     SizedBox(height: 40),
                     Text(
-                      'اختر نوع الحساب',
+                      'كيف تريد استخدام التطبيق؟',
                       style: TextStyle(
-                        fontSize: 32,
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1E293B),
                       ),
+                      textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: 12),
                     Text(
-                      'كيف تريد استخدام التطبيق؟',
+                      'اختر ما يناسبك للبدء',
                       style: TextStyle(
                         fontSize: 16,
                         color: Color(0xFF64748B),
@@ -93,28 +94,10 @@ class _UserTypeScreenState extends State<UserTypeScreen>
                   opacity: _fadeAnimation,
                   child: Column(
                     children: [
-                      // مقدم خدمات
+                      // أبحث عن خدمات (بدون تسجيل)
                       _buildUserTypeCard(
-                        title: 'أنا مقدم خدمات',
-                        subtitle: 'أريد عرض خدماتي للعملاء',
-                        icon: Icons.person,
-                        gradient: AppColors.secondaryGradient,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ServiceProviderFormScreen(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // باحث عن خدمات
-                      _buildUserTypeCard(
-                        title: 'أنا أبحث عن خدمات',
-                        subtitle: 'أريد العثور على مقدمي الخدمات',
+                        title: 'أبحث عن خدمات',
+                        subtitle: 'تصفح واعثر على مقدمي الخدمات\nبدون الحاجة لإنشاء حساب',
                         icon: Icons.search,
                         gradient: AppColors.primaryGradient,
                         onTap: () {
@@ -126,12 +109,64 @@ class _UserTypeScreenState extends State<UserTypeScreen>
                           );
                         },
                       ),
+
+                      const SizedBox(height: 20),
+
+                      // مقدم خدمات (يحتاج تسجيل)
+                      _buildUserTypeCard(
+                        title: 'أريد تقديم خدماتي',
+                        subtitle: 'أنشئ حساباً واعرض خدماتك\nواربط مع العملاء',
+                        icon: Icons.work,
+                        gradient: AppColors.secondaryGradient,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SignUpScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
               ),
 
               const Spacer(),
+
+              // معلومات إضافية
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'يمكن للعملاء البحث والتصفح مجاناً بدون تسجيل',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -192,22 +227,31 @@ class _UserTypeScreenState extends State<UserTypeScreen>
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     subtitle,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withOpacity(0.9),
+                      height: 1.4,
                     ),
                   ),
                 ],
               ),
             ),
 
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.white,
-              size: 20,
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
           ],
         ),
