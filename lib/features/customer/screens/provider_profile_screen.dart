@@ -35,13 +35,15 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
       backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
-          // Header مع صورة البروفايل والمعلومات الأساسية
           SliverAppBar(
             expandedHeight: 300.0,
             floating: false,
             pinned: true,
             elevation: 0,
             backgroundColor: Colors.white,
+            iconTheme: const IconThemeData(
+              color: Colors.white,
+            ),
             foregroundColor: AppColors.primary,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
@@ -58,7 +60,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                 ),
                 child: Stack(
                   children: [
-                    // خلفية متدرجة للتأثير البصري
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
@@ -75,15 +76,13 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                       ),
                     ),
 
-                    // محتوى البروفايل الرئيسي
                     Positioned(
-                      bottom: 60,
+                      bottom: 25,
                       left: 24,
                       right: 24,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // صورة البروفايل الكبيرة
                           Container(
                             width: 120,
                             height: 120,
@@ -113,7 +112,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
 
                           const SizedBox(height: 16),
 
-                          // اسم مقدم الخدمة مع شارة التوثيق
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -128,45 +126,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                                   textAlign: TextAlign.center,
                                 ),
                               ),
-                              if (widget.provider.isVerified) ...[
-                                const SizedBox(width: 12),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.secondary,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.verified,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        'موثق',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
                             ],
                           ),
 
@@ -201,29 +160,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              RatingStars(
-                                rating: widget.provider.rating,
-                                size: 18,
-                                color: const Color(0xFFFEF08A),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${widget.provider.rating}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '(${widget.provider.reviewsCount} تقييم)',
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(width: 20),
                               Icon(
                                 Icons.location_on,
                                 color: Colors.white70,
@@ -248,7 +184,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             ),
           ),
 
-          // إحصائيات سريعة
           SliverToBoxAdapter(
             child: Container(
               color: Colors.white,
@@ -592,11 +527,10 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   Widget _buildContactTab() {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          // طرق التواصل
           _buildSectionCard(
             'طرق التواصل',
             Icons.contact_phone,
@@ -608,7 +542,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   AppColors.primary,
                       () => _makePhoneCall(),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 _buildContactButton(
                   'واتساب',
                   Icons.chat,
@@ -619,91 +553,83 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
 
-          // معلومات التواصل
-          if (widget.provider.phoneNumber != null || widget.provider.address != null)
-            _buildSectionCard(
-              'معلومات التواصل',
-              Icons.info,
-              child: Column(
-                children: [
-                  if (widget.provider.phoneNumber != null)
-                    _buildInfoRow(
-                      Icons.phone,
-                      'رقم الهاتف',
-                      widget.provider.phoneNumber!,
-                    ),
-                  if (widget.provider.address != null)
-                    _buildInfoRow(
-                      Icons.location_on,
-                      'العنوان',
-                      widget.provider.address!,
-                    ),
-                  _buildInfoRow(
-                    Icons.location_city,
-                    'المدينة',
-                    widget.provider.city,
-                  ),
-                  if (widget.provider.workHours != null)
-                    _buildInfoRow(
-                      Icons.access_time,
-                      'ساعات العمل',
-                      widget.provider.workHours!,
-                    ),
-                ],
-              ),
-            ),
-
-          const Spacer(),
-
-          // معلومات إضافية عن الانضمام
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withOpacity(0.05),
-                  AppColors.secondary.withOpacity(0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.primary.withOpacity(0.1),
-              ),
-            ),
+          // Social Media Section
+          _buildSectionCard(
+            'وسائل التواصل الاجتماعي',
+            Icons.share,
             child: Column(
               children: [
-                Icon(
-                  Icons.calendar_today,
-                  color: AppColors.primary,
-                  size: 24,
+                _buildContactButton(
+                  'Instagram',
+                  Icons.camera_alt,
+                  const Color(0xFFE4405F), // Instagram brand color
+                      () => _openInstagram(),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'عضو منذ ${_formatJoinDate(widget.provider.joinDate)}',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+                _buildContactButton(
+                  'LinkedIn',
+                  Icons.business,
+                  const Color(0xFF0077B5), // LinkedIn brand color
+                      () => _openLinkedIn(),
                 ),
-                if (widget.provider.isVerified)
-                  Text(
-                    'حساب موثق ✓',
-                    style: TextStyle(
-                      color: AppColors.secondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
               ],
             ),
           ),
+
+          const SizedBox(height: 8),
         ],
       ),
     );
+  }
+
+// Add these methods to handle social media links
+  void _openInstagram() async {
+    const instagramUrl = 'https://instagram.com/your_username'; // استبدل your_username باسم المستخدم الخاص بك
+    const instagramAppUrl = 'instagram://user?username=your_username'; // للفتح في التطبيق مباشرة
+
+    try {
+      if (await canLaunchUrl(Uri.parse(instagramAppUrl))) {
+        await launchUrl(Uri.parse(instagramAppUrl));
+      } else {
+        await launchUrl(
+          Uri.parse(instagramUrl),
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (e) {
+      // Handle error - show snackbar or toast
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تعذر فتح Instagram'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _openLinkedIn() async {
+    const linkedInUrl = 'https://linkedin.com/in/your_profile'; // استبدل your_profile برابط البروفايل الخاص بك
+
+    try {
+      await launchUrl(
+        Uri.parse(linkedInUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      // Handle error - show snackbar or toast
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تعذر فتح LinkedIn'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildSectionCard(String title, IconData icon, {required Widget child}) {
@@ -877,21 +803,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
         ),
       ),
     );
-  }
-
-  String _formatJoinDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays < 30) {
-      return '${difference.inDays} يوم';
-    } else if (difference.inDays < 365) {
-      final months = (difference.inDays / 30).floor();
-      return '$months شهر';
-    } else {
-      final years = (difference.inDays / 365).floor();
-      return '$years سنة';
-    }
   }
 
   void _showErrorSnackbar(String message) {

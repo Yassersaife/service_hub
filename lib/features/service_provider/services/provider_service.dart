@@ -233,6 +233,7 @@ class ProviderService {
     final dummyProfiles = [
       ProviderProfile(
         userId: '1',
+        name: 'ياسر صيفي',
         serviceType: 'photographer',
         city: 'نابلس',
         description: 'مصور محترف متخصص في التصوير الفوتوغرافي والأعراس والمناسبات الخاصة. أعمل في هذا المجال منذ أكثر من 8 سنوات وأمتلك خبرة واسعة في التعامل مع العملاء وتقديم أفضل النتائج. أستخدم أحدث المعدات والتقنيات للحصول على صور عالية الجودة.',
@@ -260,6 +261,7 @@ class ProviderService {
 
       ProviderProfile(
         userId: '2',
+        name: 'لين قدومي',
         serviceType: 'video-editor',
         city: 'طولكرم',
         description: 'متخصصة في مونتاج الفيديوهات والأفلام القصيرة والإعلانات التجارية. أقدم خدمات احترافية في المونتاج والموشن جرافيك والتأثيرات البصرية. أعمل مع برامج Adobe Premier Pro وAfter Effects وDaVinci Resolve.',
@@ -285,6 +287,7 @@ class ProviderService {
 
       ProviderProfile(
         userId: '3',
+        name: 'براد',
         serviceType: 'photo-editor',
         city: 'رام الله',
         description: 'خبير في تعديل وتحسين الصور باستخدام أحدث التقنيات والبرامج الاحترافية. أقدم خدمات الريتوش والتلوين والتصحيح والتصميم الجرافيكي. متخصص في Photoshop وLightroom وCapture One.',
@@ -310,6 +313,7 @@ class ProviderService {
 
       ProviderProfile(
         userId: '4',
+        name: 'حفص عبوشي',
         serviceType: 'printer',
         city: 'الخليل',
         description: 'مطبعة متخصصة في طباعة الصور بجودة عالية وأحجام مختلفة. نوفر خدمات الطباعة على مواد متنوعة وبأسعار منافسة. نستخدم طابعات Canon وEpson الاحترافية لضمان أفضل جودة.',
@@ -328,77 +332,6 @@ class ProviderService {
           'facebook': 'https://facebook.com/alquds.printing',
         },
         joinDate: DateTime.now().subtract(const Duration(days: 730)),
-        isComplete: true,
-      ),
-
-      ProviderProfile(
-        userId: '5',
-        serviceType: 'photographer',
-        city: 'جنين',
-        description: 'مصورة متخصصة في تصوير الأطفال والعائلات. أركز على اللحظات الطبيعية والعفوية لخلق ذكريات جميلة. أحب العمل في البيئات الطبيعية والاستوديو على حد سواء.',
-        profileImage: 'https://images.unsplash.com/photo-1485893086445-ed75865251e0?w=300',
-        portfolioImages: [
-          'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400',
-          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
-          'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400',
-          'https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=400',
-        ],
-        rating: 4.7,
-        reviewsCount: 22,
-        workHours: 'الأحد والثلاثاء والخميس: 4 مساءً - 8 مساءً',
-        isVerified: false,
-        specialties: ['تصوير أطفال', 'تصوير عائلي', 'تصوير خارجي', 'تصوير حديثي الولادة'],
-        socialMedia: {
-          'instagram': 'https://instagram.com/nour_family_photography',
-        },
-        joinDate: DateTime.now().subtract(const Duration(days: 547)),
-        isComplete: true,
-      ),
-
-      ProviderProfile(
-        userId: '6',
-        serviceType: 'video-editor',
-        city: 'بيت لحم',
-        description: 'محرر فيديو متخصص في إنتاج المحتوى الرقمي ومقاطع اليوتيوب والسوشال ميديا. أعمل مع المؤثرين والشركات لإنتاج محتوى جذاب ومبتكر.',
-        profileImage: 'https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=300',
-        portfolioImages: [
-          'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400',
-          'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=400',
-        ],
-        rating: 4.3,
-        reviewsCount: 18,
-        workHours: 'مرن - حسب المشروع',
-        isVerified: false,
-        specialties: ['محتوى يوتيوب', 'مقاطع قصيرة', 'إعلانات سوشال ميديا', 'المونتاج السريع'],
-        socialMedia: {
-          'instagram': 'https://instagram.com/omar_video_creator',
-          'twitter': 'https://twitter.com/omar_video',
-        },
-        joinDate: DateTime.now().subtract(const Duration(days: 365)),
-        isComplete: true,
-      ),
-
-      ProviderProfile(
-        userId: '7',
-        serviceType: 'photo-editor',
-        city: 'نابلس',
-        description: 'مصممة جرافيك ومحررة صور محترفة. أعمل في تصميم الهويات البصرية والشعارات وتعديل الصور التجارية. لدي خبرة 6 سنوات في المجال.',
-        profileImage: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300',
-        portfolioImages: [
-          'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400',
-          'https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=400',
-          'https://images.unsplash.com/photo-1586717799252-bd134ad00e26?w=400',
-        ],
-        rating: 4.5,
-        reviewsCount: 31,
-        workHours: 'السبت - الأربعاء: 9 صباحاً - 5 مساءً',
-        isVerified: true,
-        specialties: ['تصميم الشعارات', 'تصميم الهوية البصرية', 'تحرير الصور التجارية', 'تصميم المطبوعات'],
-        socialMedia: {
-          'facebook': 'https://facebook.com/rana.designs',
-          'instagram': 'https://instagram.com/rana_graphic_designer',
-        },
-        joinDate: DateTime.now().subtract(const Duration(days: 1460)),
         isComplete: true,
       ),
     ];

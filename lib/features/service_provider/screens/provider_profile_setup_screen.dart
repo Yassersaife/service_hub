@@ -711,7 +711,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
   }
 
   Widget _buildSocialMediaSection() {
-    final platforms = ['Facebook', 'Instagram', 'Twitter', 'LinkedIn'];
+    final platforms = ['Instagram', 'LinkedIn'];
 
     return Column(
       children: platforms.map((platform) {

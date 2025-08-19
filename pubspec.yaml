@@ -16,8 +16,13 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+
   flutter:
     sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+
   url_launcher: ^6.1.12
   image_picker: ^1.1.2
 

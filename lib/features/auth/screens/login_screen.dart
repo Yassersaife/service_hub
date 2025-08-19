@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';
-import '../models/user.dart';
 import 'signup_screen.dart';
 import '../../service_provider/screens/provider_dashboard_screen.dart';
 
@@ -54,17 +53,14 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 40),
 
-              // الشعار والعنوان
               _buildHeader(),
 
               const SizedBox(height: 40),
 
-              // نموذج تسجيل الدخول
               _buildLoginForm(),
 
               const SizedBox(height: 20),
 
-              // رابط التسجيل
               _buildSignUpLink(),
             ],
           ),
@@ -95,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 20),
 
         const Text(
-          'مرحباً بعودتك',
+          'Pro Connect',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -134,7 +130,6 @@ class _LoginScreenState extends State<LoginScreen> {
         key: _formKey,
         child: Column(
           children: [
-            // البريد الإلكتروني
             CustomTextField(
               label: 'البريد الإلكتروني',
               hint: 'example@email.com',
@@ -167,7 +162,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
             const SizedBox(height: 30),
 
-            // زر تسجيل الدخول
             SizedBox(
               width: double.infinity,
               height: 56,
@@ -249,39 +243,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
         ),
-
-        const SizedBox(height: 16),
-
-        // تنبيه للعملاء
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF0F9FF),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: AppColors.primary.withOpacity(0.2),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: AppColors.primary,
-                size: 16,
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'هذا تسجيل دخول لمقدمي الخدمات فقط. العملاء لا يحتاجون حساب للبحث',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF475569),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -305,7 +266,6 @@ class _LoginScreenState extends State<LoginScreen> {
     if (result.isSuccess) {
       final user = _authService.currentUser!;
 
-      // الدخول للـ dashboard بغض النظر عن نوع المستخدم
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

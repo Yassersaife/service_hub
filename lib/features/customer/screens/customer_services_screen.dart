@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:service_hub/features/auth/models/user.dart';
+import 'package:service_hub/screens/user_type_screen.dart';
 import '../../../utils/app_colors.dart';
 import '../../../screens/welcome_screen.dart';
 import '../../service_provider/services/provider_service.dart';
@@ -53,7 +55,6 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
         return matchesSearch && matchesCity && matchesService;
       }).toList();
 
-      // ترتيب النتائج
       _filteredProviders.sort((a, b) {
         switch (_sortBy) {
           case 'city':
@@ -135,7 +136,7 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+              MaterialPageRoute(builder: (context) => const UserTypeScreen()),
             );
           },
         ),
@@ -170,7 +171,6 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
             totalCount: _allProviders.length,
           ),
 
-          // النتائج
           Expanded(
             child: _filteredProviders.isEmpty
                 ? _buildEmptyResults()
