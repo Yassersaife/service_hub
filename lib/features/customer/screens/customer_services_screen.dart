@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/features/auth/models/user.dart';
-import 'package:service_hub/screens/user_type_screen.dart';
 import '../../../utils/app_colors.dart';
-import '../../../screens/welcome_screen.dart';
 import '../../service_provider/services/provider_service.dart';
 import '../../service_provider/models/provider_profile.dart';
 import '../../../widgets/service_provider_card_guest.dart';
 import '../../../widgets/search_filters_guest.dart';
 
 class CustomerServicesScreen extends StatefulWidget {
-  const CustomerServicesScreen({super.key});
+  final String? initialServiceType;
+
+  const CustomerServicesScreen({super.key, this.initialServiceType});
 
   @override
   State<CustomerServicesScreen> createState() => _CustomerServicesScreenState();
@@ -30,6 +29,8 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
   @override
   void initState() {
     super.initState();
+    // تطبيق الفلتر المبدئي إذا تم تمريره
+    _selectedService = widget.initialServiceType;
     _loadProviders();
   }
 
@@ -40,6 +41,9 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
       _filteredProviders = providers;
       _isLoading = false;
     });
+
+    // تطبيق الفلاتر بعد تحميل البيانات
+    _applyFilters();
   }
 
   void _applyFilters() {
@@ -131,19 +135,10 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
         ),
         centerTitle: true,
         iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const UserTypeScreen()),
-            );
-          },
-        ),
+        automaticallyImplyLeading: widget.initialServiceType != null ? true : false,
       ),
       body: Column(
         children: [
-
           SearchFiltersGuest(
             searchTerm: _searchTerm,
             selectedCity: _selectedCity,

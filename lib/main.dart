@@ -1,9 +1,14 @@
+// lib/main.dart - Updated with routes
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:service_hub/features/service_provider/services/provider_service.dart';
 import 'screens/welcome_screen.dart';
+import 'features/customer/screens/customer_bottom_navigation_screen.dart';
+import 'features/customer/screens/customer_services_screen.dart';
+import 'features/customer/screens/all_providers_screen.dart';
 
 void main() {
+  // تهيئة البيانات التجريبية
   ProviderService().initializeDummyData();
   runApp(const ProConnectApp());
 }
@@ -33,6 +38,10 @@ class ProConnectApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         home: const WelcomeScreen(),
+        routes: {
+          '/customer': (context) => const CustomerBottomNavigationScreen(),
+          '/search': (context) => const CustomerServicesScreen(),
+        },
       ),
     );
   }

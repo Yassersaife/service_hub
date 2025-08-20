@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:service_hub/features/auth/screens/login_screen.dart';
 import '../utils/app_colors.dart';
-import '../features/auth/screens/signup_screen.dart';
-import '../features/customer/screens/customer_services_screen.dart';
+import '../features/customer/screens/customer_bottom_navigation_screen.dart';
 
 class UserTypeScreen extends StatefulWidget {
   const UserTypeScreen({super.key});
@@ -105,7 +104,7 @@ class _UserTypeScreenState extends State<UserTypeScreen>
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const CustomerServicesScreen(),
+                              builder: (context) => const CustomerBottomNavigationScreen(),
                             ),
                           );
                         },
