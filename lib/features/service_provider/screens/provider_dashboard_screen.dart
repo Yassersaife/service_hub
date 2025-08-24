@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:service_hub/core/utils/app_colors.dart';
+import 'package:service_hub/features/auth/screens/login_screen.dart';
+import 'package:service_hub/features/auth/services/auth_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/utils/app_colors.dart';
-import '../../auth/services/auth_service.dart';
-import '../../auth/screens/login_screen.dart';
 import '../services/provider_service.dart';
 import '../models/provider_profile.dart';
 import 'provider_profile_setup_screen.dart';

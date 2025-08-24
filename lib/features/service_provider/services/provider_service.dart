@@ -1,4 +1,3 @@
-// lib/features/service_provider/services/provider_service.dart
 import '../models/provider_profile.dart';
 
 class ProviderService {
