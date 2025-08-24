@@ -7,9 +7,15 @@ import '../../../widgets/search_filters_guest.dart';
 
 class CustomerServicesScreen extends StatefulWidget {
   final String? initialServiceType;
+  final String? categoryId;
+  final String? categoryName;
 
-  const CustomerServicesScreen({super.key, this.initialServiceType});
-
+  const CustomerServicesScreen({
+    super.key,
+    this.initialServiceType,
+    this.categoryId,
+    this.categoryName,
+  });
   @override
   State<CustomerServicesScreen> createState() => _CustomerServicesScreenState();
 }

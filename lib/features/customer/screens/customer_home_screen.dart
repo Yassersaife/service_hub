@@ -4,6 +4,8 @@ import 'package:service_hub/widgets/beautiful_provider_card.dart';
 import '../../service_provider/services/provider_service.dart';
 import '../../service_provider/models/provider_profile.dart';
 import '../../../core/utils/app_colors.dart';
+import '../../../services/services_api_service.dart';
+import '../../../models/service_models.dart';
 import 'customer_services_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
@@ -17,54 +19,8 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   final _providerService = ProviderService();
   List<ProviderProfile> _topProviders = [];
   List<ProviderProfile> _newProviders = [];
+  List<ServiceCategory> _serviceCategories = [];
   bool _isLoading = true;
-
-  final List<Map<String, dynamic>> _serviceCategories = [
-    {
-      'name': 'مصور فوتوغرافي',
-      'icon': Icons.camera_alt,
-      'serviceType': 'photographer',
-      'color': const Color(0xFF3B82F6),
-      'gradient': const LinearGradient(
-        colors: [Color(0xFF3B82F6), Color(0xFF1E40AF)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    },
-    {
-      'name': 'محرر فيديو',
-      'icon': Icons.video_camera_back,
-      'serviceType': 'video-editor',
-      'color': const Color(0xFFEF4444),
-      'gradient': const LinearGradient(
-        colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    },
-    {
-      'name': 'محرر صور',
-      'icon': Icons.edit,
-      'serviceType': 'photo-editor',
-      'color': const Color(0xFF10B981),
-      'gradient': const LinearGradient(
-        colors: [Color(0xFF10B981), Color(0xFF059669)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    },
-    {
-      'name': 'مطبعة',
-      'icon': Icons.print,
-      'serviceType': 'printer',
-      'color': const Color(0xFF8B5CF6),
-      'gradient': const LinearGradient(
-        colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    },
-  ];
 
   @override
   void initState() {
@@ -74,19 +30,24 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   Future<void> _loadData() async {
     try {
-      _providerService.initializeDummyData();
+      setState(() {
+        _isLoading = true;
+      });
 
+      final categories = await ServicesApiService.getAllServiceCategories();
       final topRated = await _providerService.getTopRatedProviders(limit: 5);
       final allProviders = await _providerService.getAllProviders();
 
       allProviders.sort((a, b) => b.joinDate.compareTo(a.joinDate));
 
       setState(() {
+        _serviceCategories = categories;
         _topProviders = topRated;
         _newProviders = allProviders.take(3).toList();
         _isLoading = false;
       });
     } catch (e) {
+      print('Error loading data: $e');
       setState(() {
         _isLoading = false;
       });
@@ -109,9 +70,6 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            setState(() {
-              _isLoading = true;
-            });
             await _loadData();
           },
           child: CustomScrollView(
@@ -121,7 +79,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 child: _buildHeader(),
               ),
 
-              SliverToBoxAdapter(
+              const SliverToBoxAdapter(
                 child: SizedBox(height: 16),
               ),
 
@@ -130,7 +88,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 child: _buildAdBanner(),
               ),
 
-              SliverToBoxAdapter(
+              const SliverToBoxAdapter(
                 child: SizedBox(height: 16),
               ),
 
@@ -139,7 +97,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 child: _buildServiceCategories(),
               ),
 
-              SliverToBoxAdapter(
+              const SliverToBoxAdapter(
                 child: SizedBox(height: 16),
               ),
 
@@ -170,13 +128,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           bottomRight: Radius.circular(30),
         ),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -306,36 +264,25 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           ),
         ),
         SizedBox(
-          height: 120,
+          height: 130,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: _serviceCategories.length,
             itemBuilder: (context, index) {
-              final service = _serviceCategories[index];
+              final category = _serviceCategories[index];
               return Container(
-                width: 100,
+                width: 110,
                 margin: const EdgeInsets.only(right: 15),
                 child: GestureDetector(
-                  onTap: () {
-                    // Navigate to services by category
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            CustomerServicesScreen(
-                              initialServiceType: service['serviceType'],
-                            ),
-                      ),
-                    );
-                  },
+                  onTap: () => _navigateToCategory(category),
                   child: Container(
                     decoration: BoxDecoration(
-                      gradient: service['gradient'] as LinearGradient,
+                      gradient: category.getLinearGradient(),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: (service['color'] as Color).withOpacity(0.3),
+                          color: category.getPrimaryColor().withOpacity(0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -345,29 +292,51 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: 45,
+                          height: 45,
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(15),
                           ),
                           child: Icon(
-                            service['icon'] as IconData,
+                            category.getCategoryIcon(),
                             color: Colors.white,
-                            size: 24,
+                            size: 26,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          service['name'] as String,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                        const SizedBox(height: 12),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            category.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${category.servicesCount} خدمة',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -439,6 +408,18 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _navigateToCategory(ServiceCategory category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CustomerServicesScreen(
+          categoryId: category.id.toString(),
+          categoryName: category.name,
+        ),
+      ),
     );
   }
 }

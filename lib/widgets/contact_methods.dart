@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:service_hub/models/service_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../models/service_provider.dart';
 import '../core/utils/app_colors.dart';
 
 class ContactMethods extends StatelessWidget {
