@@ -1,17 +1,20 @@
-// lib/main.dart - Updated with routes
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:service_hub/core/utils/app_initializer.dart';
+import 'package:service_hub/features/auth/services/auth_service.dart';
 import 'package:service_hub/features/service_provider/services/provider_service.dart';
-import 'screens/welcome_screen.dart';
 import 'features/customer/screens/customer_bottom_navigation_screen.dart';
 import 'features/customer/screens/customer_services_screen.dart';
-import 'features/customer/screens/all_providers_screen.dart';
 
-void main() {
-  // تهيئة البيانات التجريبية
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   ProviderService().initializeDummyData();
+  await AuthService.loadSavedData();
+
   runApp(const ProConnectApp());
 }
+
 
 class ProConnectApp extends StatelessWidget {
   const ProConnectApp({super.key});
@@ -37,7 +40,7 @@ class ProConnectApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        home: const WelcomeScreen(),
+        home: const AppInitializer(),
         routes: {
           '/customer': (context) => const CustomerBottomNavigationScreen(),
           '/search': (context) => const CustomerServicesScreen(),

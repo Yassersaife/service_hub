@@ -1,7 +1,6 @@
-// lib/features/service_provider/screens/provider_dashboard_screen.dart
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../utils/app_colors.dart';
+import '../../../core/utils/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/screens/login_screen.dart';
 import '../services/provider_service.dart';
@@ -16,7 +15,6 @@ class ProviderDashboardScreen extends StatefulWidget {
 }
 
 class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
-  final _authService = AuthService();
   final _providerService = ProviderService();
   ProviderProfile? _profile;
   bool _isLoading = true;
@@ -28,11 +26,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   }
 
   void _loadProfile() async {
-    final user = _authService.currentUser;
+    final user = AuthService.currentUser;
     if (user != null) {
-      final profile = await _providerService.getProfile(user.id);
+      final profile = [await _providerService.getProfile(user['id'])];
       setState(() {
-        _profile = profile;
+        _profile = user['id'];
         _isLoading = false;
       });
     }
@@ -60,7 +58,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   }
 
   Widget _buildWelcomeScreen() {
-    final user = _authService.currentUser!;
+    final user = AuthService.currentUser!;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -69,7 +67,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           const SizedBox(height: 40),
 
           // ترحيب
-          _buildWelcomeHeader(user.name),
+          _buildWelcomeHeader(user['name']),
 
           const SizedBox(height: 40),
 
@@ -333,7 +331,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             ),
             child: FlexibleSpaceBar(
               title: Text(
-                'مرحباً ${_authService.currentUser!.name}',
+                'مرحباً ${AuthService.currentUser!['Name']}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -618,7 +616,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _profile!.name ?? _authService.currentUser!.name,
+                      _profile!.name ?? AuthService.currentUser!['name'],
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -831,7 +829,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
 
     if (shouldLogout == true) {
-      await _authService.signOut();
+      await AuthService.logout();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),

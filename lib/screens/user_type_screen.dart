@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:service_hub/features/auth/screens/login_screen.dart';
-import '../utils/app_colors.dart';
+import '../core/utils/app_colors.dart';
 import '../features/customer/screens/customer_bottom_navigation_screen.dart';
 
 class UserTypeScreen extends StatefulWidget {

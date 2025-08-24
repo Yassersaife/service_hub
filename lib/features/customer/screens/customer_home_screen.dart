@@ -3,7 +3,7 @@ import 'package:service_hub/features/customer/screens/all_providers_screen.dart'
 import 'package:service_hub/widgets/beautiful_provider_card.dart';
 import '../../service_provider/services/provider_service.dart';
 import '../../service_provider/models/provider_profile.dart';
-import '../../../utils/app_colors.dart';
+import '../../../core/utils/app_colors.dart';
 import 'customer_services_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {

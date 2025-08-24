@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../features/service_provider/models/provider_profile.dart';
 import '../features/customer/screens/provider_profile_screen.dart';
-import '../utils/app_colors.dart';
+import '../core/utils/app_colors.dart';
 
 class BeautifulProviderCard extends StatelessWidget {
   final ProviderProfile provider;

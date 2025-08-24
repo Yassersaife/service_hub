@@ -287,7 +287,7 @@ class ProviderService {
 
       ProviderProfile(
         userId: '3',
-        name: 'براد',
+        name: 'براء',
         serviceType: 'photo-editor',
         city: 'رام الله',
         description: 'خبير في تعديل وتحسين الصور باستخدام أحدث التقنيات والبرامج الاحترافية. أقدم خدمات الريتوش والتلوين والتصحيح والتصميم الجرافيكي. متخصص في Photoshop وLightroom وCapture One.',
@@ -315,6 +315,7 @@ class ProviderService {
         userId: '4',
         name: 'حفص عبوشي',
         serviceType: 'printer',
+        address:'الخليل -دورة',
         city: 'الخليل',
         description: 'مطبعة متخصصة في طباعة الصور بجودة عالية وأحجام مختلفة. نوفر خدمات الطباعة على مواد متنوعة وبأسعار منافسة. نستخدم طابعات Canon وEpson الاحترافية لضمان أفضل جودة.',
         profileImage: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300',

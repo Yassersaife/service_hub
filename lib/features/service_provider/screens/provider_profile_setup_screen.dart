@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:service_hub/features/service_provider/services/provider_service.dart';
-import '../../../utils/app_colors.dart';
+import '../../../core/utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
 import '../../../widgets/custom_dropdown.dart';
 import '../../auth/services/auth_service.dart';
@@ -958,10 +958,10 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
       _isLoading = true;
     });
 
-    final user = _authService.currentUser!;
+    final user = AuthService.currentUser!;
 
     final profile = ProviderProfile(
-      userId: user.id,
+      userId: user['id'],
       serviceType: _selectedService!,
       city: _selectedCity!,
       description: _descriptionController.text,

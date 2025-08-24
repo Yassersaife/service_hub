@@ -1,6 +1,6 @@
 // lib/screens/welcome_screen.dart - Updated
 import 'package:flutter/material.dart';
-import '../utils/app_colors.dart';
+import '../core/utils/app_colors.dart';
 import 'user_type_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {

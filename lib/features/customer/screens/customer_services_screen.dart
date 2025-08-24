@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../utils/app_colors.dart';
+import '../../../core/utils/app_colors.dart';
 import '../../service_provider/services/provider_service.dart';
 import '../../service_provider/models/provider_profile.dart';
 import '../../../widgets/service_provider_card_guest.dart';

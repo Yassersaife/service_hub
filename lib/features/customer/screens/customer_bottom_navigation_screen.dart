@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:service_hub/features/customer/screens/about_app_screen.dart';
-import '../../../utils/app_colors.dart';
+import '../../../core/utils/app_colors.dart';
 import 'customer_home_screen.dart';
 import 'customer_services_screen.dart';
 

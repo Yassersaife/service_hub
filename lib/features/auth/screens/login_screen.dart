@@ -1,6 +1,6 @@
 // lib/features/auth/screens/login_screen.dart
 import 'package:flutter/material.dart';
-import '../../../utils/app_colors.dart';
+import '../../../core/utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';
 import 'signup_screen.dart';
@@ -254,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    final result = await _authService.signIn(
+    final result = await AuthService.login(
       email: _emailController.text,
       password: _passwordController.text,
     );
@@ -263,8 +263,8 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = false;
     });
 
-    if (result.isSuccess) {
-      final user = _authService.currentUser!;
+    if (result.success) {
+      final userName = AuthService.userName ?? 'المستخدم';
 
       Navigator.pushReplacement(
         context,
@@ -275,7 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('مرحباً ${user.name}'),
+          content: Text('مرحباً $userName'),
           backgroundColor: Colors.green,
         ),
       );
@@ -283,7 +283,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.message),
-          backgroundColor: AppColors.error,
+          backgroundColor: Colors.red, // أو AppColors.error
         ),
       );
     }

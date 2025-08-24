@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:service_hub/features/customer/screens/provider_profile_screen.dart';
 import '../features/service_provider/models/provider_profile.dart';
-import '../utils/app_colors.dart';
+import '../core/utils/app_colors.dart';
 
 class ServiceProviderCardGuest extends StatelessWidget {
   final ProviderProfile profile;

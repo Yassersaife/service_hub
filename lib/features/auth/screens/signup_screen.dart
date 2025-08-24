@@ -1,6 +1,6 @@
 // lib/features/auth/screens/signup_screen.dart
 import 'package:flutter/material.dart';
-import '../../../utils/app_colors.dart';
+import '../../../core/utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';
 import '../models/user.dart';
@@ -352,17 +352,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('كلمة المرور غير متطابقة'),
-          backgroundColor: AppColors.error,
+          backgroundColor: Colors.red, // أو AppColors.error
         ),
       );
       return;
     }
 
-    if (_passwordController.text.length < 6) {
+    if (_passwordController.text.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
-          backgroundColor: AppColors.error,
+          content: Text('كلمة المرور يجب أن تكون 8 أحرف على الأقل'),
+          backgroundColor: Colors.red, // أو AppColors.error
         ),
       );
       return;
@@ -372,32 +372,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _isLoading = true;
     });
 
-    final result = await _authService.signUp(
+    final result = await AuthService.register(
       name: _nameController.text,
       email: _emailController.text,
       phone: _phoneController.text,
-      userType: UserType.serviceProvider, // دائماً مقدم خدمة
+      password: _passwordController.text,
+      userType: 'provider',
     );
 
     setState(() {
       _isLoading = false;
     });
 
-    if (result.isSuccess) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EmailVerificationScreen(
-            email: _emailController.text,
-            userType: UserType.serviceProvider,
-          ),
-        ),
-      );
+    if (result.success) {
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => EmailVerificationScreen(
+      //       email: _emailController.text,
+      //       userType: 'provider',
+      //     ),
+      //   ),
+      // );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.message),
-          backgroundColor: AppColors.error,
+          backgroundColor: Colors.red, // أو AppColors.error
         ),
       );
     }
