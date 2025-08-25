@@ -1,5 +1,6 @@
 // lib/features/auth/screens/signup_screen.dart
 import 'package:flutter/material.dart';
+import 'package:service_hub/features/service_provider/screens/provider_dashboard_screen.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';
@@ -385,15 +386,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     if (result.success) {
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => EmailVerificationScreen(
-      //       email: _emailController.text,
-      //       userType: 'provider',
-      //     ),
-      //   ),
-      // );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProviderDashboardScreen(),
+        ),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -1,5 +1,6 @@
 // lib/widgets/search_filters_guest.dart
 import 'package:flutter/material.dart';
+import 'package:service_hub/models/service_models.dart';
 import '../features/service_provider/models/provider_profile.dart';
 import '../core/utils/app_colors.dart';
 
@@ -16,6 +17,7 @@ class SearchFiltersGuest extends StatefulWidget {
   final VoidCallback onClearFilters;
   final int resultsCount;
   final int totalCount;
+  final List<ServiceCategory> allCategories;
 
   const SearchFiltersGuest({
     super.key,
@@ -31,6 +33,7 @@ class SearchFiltersGuest extends StatefulWidget {
     required this.onClearFilters,
     required this.resultsCount,
     required this.totalCount,
+    required this.allCategories,
   });
 
   @override
@@ -40,13 +43,6 @@ class SearchFiltersGuest extends StatefulWidget {
 class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
   bool showAdvancedFilters = false;
   late TextEditingController _searchController;
-
-  final List<Map<String, String>> _serviceTypes = [
-    {'value': 'photographer', 'label': 'مصور'},
-    {'value': 'video-editor', 'label': 'مونتاج فيديوهات'},
-    {'value': 'photo-editor', 'label': 'تعديل صور'},
-    {'value': 'printer', 'label': 'طباعة صور'},
-  ];
 
   @override
   void initState() {
@@ -81,7 +77,6 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
       ),
       child: Column(
         children: [
-          // شريط البحث الرئيسي
           TextField(
             controller: _searchController,
             onChanged: widget.onSearchChanged,
@@ -103,10 +98,8 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
 
           const SizedBox(height: 12),
 
-          // شريط المعلومات والتحكم
           Row(
             children: [
-              // عداد النتائج
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
@@ -136,7 +129,6 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
 
               const Spacer(),
 
-              // زر الفلاتر
               TextButton.icon(
                 onPressed: () {
                   setState(() {
@@ -210,7 +202,7 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
                         child: _buildFilterDropdown(
                           label: 'نوع الخدمة',
                           value: widget.selectedService,
-                          items: ['الكل', ..._serviceTypes.map((e) => e['value']!)],
+                          items: ['الكل', ...widget.allCategories.map((c) => c.name)],
                           onChanged: (value) {
                             widget.onServiceChanged(value == 'الكل' ? null : value);
                           },
@@ -224,8 +216,8 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
                   _buildFilterDropdown(
                     label: 'ترتيب حسب',
                     value: widget.sortBy,
-                    items: const ['name', 'city', 'service', 'rating'],
-                    itemLabels: const ['الاسم', 'المدينة', 'نوع الخدمة', 'التقييم'],
+                    items: const ['name', 'city', 'service'],
+                    itemLabels: const ['الاسم', 'المدينة', 'نوع الخدمة'],
                     onChanged: (value) {
                       if (value != null) widget.onSortChanged(value);
                     },
@@ -265,6 +257,7 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
             border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: DropdownButtonFormField<String>(
+            isExpanded: true,
             value: value,
             decoration: const InputDecoration(
               border: InputBorder.none,

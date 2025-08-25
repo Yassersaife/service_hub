@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:service_hub/models/service_models.dart';
+import 'package:service_hub/services/services_api_service.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../service_provider/services/provider_service.dart';
 import '../../service_provider/models/provider_profile.dart';
@@ -26,6 +28,7 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
   List<ProviderProfile> _allProviders = [];
   List<ProviderProfile> _filteredProviders = [];
   bool _isLoading = true;
+  List<ServiceCategory> _serviceCategories = [];
 
   String _searchTerm = '';
   String? _selectedCity;
@@ -35,20 +38,25 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
   @override
   void initState() {
     super.initState();
-    // تطبيق الفلتر المبدئي إذا تم تمريره
     _selectedService = widget.initialServiceType;
     _loadProviders();
   }
 
   void _loadProviders() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final providers = await _providerService.getAllProviders();
+    final categories = await ServicesApiService.getAllServiceCategories();
+
     setState(() {
       _allProviders = providers;
       _filteredProviders = providers;
+      _serviceCategories = categories;
       _isLoading = false;
     });
 
-    // تطبيق الفلاتر بعد تحميل البيانات
     _applyFilters();
   }
 
@@ -71,8 +79,6 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
             return a.city.compareTo(b.city);
           case 'service':
             return a.getServiceLabel().compareTo(b.getServiceLabel());
-          case 'rating':
-            return b.rating.compareTo(a.rating);
           default:
             return 0;
         }
@@ -150,6 +156,7 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
             selectedCity: _selectedCity,
             selectedService: _selectedService,
             sortBy: _sortBy,
+            allCategories: _serviceCategories,
             allProviders: _allProviders,
             onSearchChanged: (value) {
               _searchTerm = value;

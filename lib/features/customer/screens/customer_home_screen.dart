@@ -263,7 +263,23 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             ),
           ),
         ),
-        SizedBox(
+
+        // تحقق إذا القائمة فاضية
+        _serviceCategories.isEmpty
+            ? const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+          child: Center(
+            child: Text(
+              'لا يتوفر خدمات حالياً',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+        )
+            : SizedBox(
           height: 130,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
