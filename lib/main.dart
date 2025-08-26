@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:service_hub/core/utils/app_initializer.dart';
 import 'package:service_hub/features/auth/services/auth_service.dart';
-import 'package:service_hub/features/service_provider/services/provider_service.dart';
 import 'features/customer/screens/customer_bottom_navigation_screen.dart';
 import 'features/customer/screens/customer_services_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  ProviderService().initializeDummyData();
   await AuthService.loadSavedData();
 
   runApp(const ProConnectApp());
 }
-
 
 class ProConnectApp extends StatelessWidget {
   const ProConnectApp({super.key});

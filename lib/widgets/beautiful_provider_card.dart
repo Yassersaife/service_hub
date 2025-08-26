@@ -1,6 +1,5 @@
-// lib/widgets/beautiful_provider_card.dart
 import 'package:flutter/material.dart';
-import '../features/service_provider/models/provider_profile.dart';
+import 'package:service_hub/features/service_provider/models/provider_profile.dart';
 import '../features/customer/screens/provider_profile_screen.dart';
 import '../core/utils/app_colors.dart';
 

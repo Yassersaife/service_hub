@@ -1,7 +1,7 @@
 // lib/widgets/search_filters_guest.dart
 import 'package:flutter/material.dart';
+import 'package:service_hub/features/service_provider/models/provider_profile.dart';
 import 'package:service_hub/models/service_models.dart';
-import '../features/service_provider/models/provider_profile.dart';
 import '../core/utils/app_colors.dart';
 
 class SearchFiltersGuest extends StatefulWidget {

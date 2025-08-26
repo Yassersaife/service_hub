@@ -4,8 +4,8 @@ import 'package:service_hub/core/utils/app_colors.dart';
 import 'package:service_hub/features/auth/services/auth_service.dart';
 import 'package:service_hub/widgets/custom_dropdown.dart';
 import 'package:service_hub/widgets/custom_text_field.dart';
-import '../services/provider_service.dart';
-import '../models/provider_profile.dart';
+import 'package:service_hub/features/service_provider/services/provider_service.dart';
+import 'package:service_hub/features/service_provider/models/provider_profile.dart';
 
 class ProviderProfileSetupScreen extends StatefulWidget {
   final ProviderProfile? existingProfile;

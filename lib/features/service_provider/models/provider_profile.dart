@@ -1,12 +1,12 @@
-// lib/features/service_provider/models/provider_profile.dart
 import 'package:flutter/material.dart';
+import 'dart:convert';
 
 class ProviderProfile {
   final String userId;
-  final String? name; // إضافة الاسم
-  final String? address; // إضافة العنوان
-  final String? phoneNumber; // إضافة رقم الهاتف
-  final String? whatsappNumber; // إضافة رقم الواتساب
+  final String? name;
+  final String? address;
+  final String? phoneNumber;
+  final String? whatsappNumber;
   final String serviceType;
   final String city;
   final String? description;
@@ -20,6 +20,8 @@ class ProviderProfile {
   final Map<String, String> socialMedia;
   final DateTime joinDate;
   final bool isComplete;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const ProviderProfile({
     required this.userId,
@@ -40,6 +42,8 @@ class ProviderProfile {
     this.socialMedia = const {},
     required this.joinDate,
     this.isComplete = false,
+    this.createdAt,
+    this.updatedAt,
   });
 
   // نسخ مع تعديل
@@ -62,6 +66,8 @@ class ProviderProfile {
     Map<String, String>? socialMedia,
     DateTime? joinDate,
     bool? isComplete,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return ProviderProfile(
       userId: userId ?? this.userId,
@@ -82,102 +88,181 @@ class ProviderProfile {
       socialMedia: socialMedia ?? this.socialMedia,
       joinDate: joinDate ?? this.joinDate,
       isComplete: isComplete ?? this.isComplete,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
-  // تحويل إلى JSON
+  // تحويل إلى JSON للإرسال إلى API
   Map<String, dynamic> toJson() {
     return {
-      'userId': userId,
+      'user_id': userId,
       'name': name,
       'address': address,
-      'phoneNumber': phoneNumber,
-      'whatsappNumber': whatsappNumber,
-      'serviceType': serviceType,
+      'phone_number': phoneNumber,
+      'whatsapp_number': whatsappNumber,
+      'service_type': serviceType,
       'city': city,
       'description': description,
-      'profileImage': profileImage,
-      'portfolioImages': portfolioImages,
+      'profile_image': profileImage,
+      'portfolio_images': portfolioImages,
       'rating': rating,
-      'reviewsCount': reviewsCount,
-      'workHours': workHours,
-      'isVerified': isVerified,
+      'reviews_count': reviewsCount,
+      'work_hours': workHours,
+      'is_verified': isVerified,
       'specialties': specialties,
-      'socialMedia': socialMedia,
-      'joinDate': joinDate.toIso8601String(),
-      'isComplete': isComplete,
+      'social_media': socialMedia,
+      'join_date': joinDate.toIso8601String(),
+      'is_complete': isComplete,
+      if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
+      if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
   }
 
-  // إنشاء من JSON
+  // إنشاء من JSON من API
   factory ProviderProfile.fromJson(Map<String, dynamic> json) {
     return ProviderProfile(
-      userId: json['userId'] as String,
+      userId: json['user_id']?.toString() ?? json['id']?.toString() ?? '',
       name: json['name'] as String?,
       address: json['address'] as String?,
-      phoneNumber: json['phoneNumber'] as String?,
-      whatsappNumber: json['whatsappNumber'] as String?,
-      serviceType: json['serviceType'] as String,
-      city: json['city'] as String,
+      phoneNumber: json['phone_number'] as String?,
+      whatsappNumber: json['whatsapp_number'] as String?,
+      serviceType: json['service_type'] as String? ?? '',
+      city: json['city'] as String? ?? '',
       description: json['description'] as String?,
-      profileImage: json['profileImage'] as String?,
-      portfolioImages: List<String>.from(json['portfolioImages'] ?? []),
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-      reviewsCount: json['reviewsCount'] as int? ?? 0,
-      workHours: json['workHours'] as String?,
-      isVerified: json['isVerified'] as bool? ?? false,
-      specialties: List<String>.from(json['specialties'] ?? []),
-      socialMedia: Map<String, String>.from(json['socialMedia'] ?? {}),
-      joinDate: DateTime.parse(json['joinDate'] as String),
-      isComplete: json['isComplete'] as bool? ?? false,
+      profileImage: json['profile_image'] as String?,
+      portfolioImages: _parseStringList(json['portfolio_images']),
+      rating: _parseDouble(json['rating']) ?? 0.0,
+      reviewsCount: json['reviews_count'] as int? ?? 0,
+      workHours: json['work_hours'] as String?,
+      isVerified: json['is_verified'] as bool? ?? false,
+      specialties: _parseStringList(json['specialties']),
+      socialMedia: _parseSocialMedia(json['social_media']),
+      joinDate: _parseDateTime(json['join_date']) ??
+          _parseDateTime(json['created_at']) ??
+          DateTime.now(),
+      isComplete: json['is_complete'] as bool? ?? false,
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
     );
+  }
+
+  // Helper methods لتحويل البيانات
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((item) => item.toString()).toList();
+    }
+    if (value is String) {
+      try {
+        // إذا كانت JSON string
+        return List<String>.from(json.decode(value));
+      } catch (e) {
+        return [value];
+      }
+    }
+    return [];
+  }
+
+  static Map<String, String> _parseSocialMedia(dynamic value) {
+    if (value == null) return {};
+    if (value is Map) {
+      return Map<String, String>.from(value);
+    }
+    if (value is String) {
+      try {
+        return Map<String, String>.from(json.decode(value));
+      } catch (e) {
+        return {};
+      }
+    }
+    return {};
+  }
+
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value);
+    }
+    return null;
+  }
+
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 
   // الحصول على تسمية الخدمة
   String getServiceLabel() {
-    switch (serviceType) {
+    switch (serviceType.toLowerCase()) {
       case 'photographer':
+      case 'photography':
         return 'مصور فوتوغرافي';
       case 'video-editor':
+      case 'video_editor':
+      case 'videographer':
         return 'محرر فيديو';
       case 'photo-editor':
+      case 'photo_editor':
         return 'محرر صور';
       case 'printer':
+      case 'printing':
         return 'مطبعة';
       case 'graphic-designer':
+      case 'graphic_designer':
         return 'مصمم جرافيك';
-      case 'videographer':
-        return 'مصور فيديو';
       case 'drone-photographer':
+      case 'drone_photographer':
         return 'مصور طائرات مسيرة';
       case 'event-photographer':
+      case 'event_photographer':
         return 'مصور مناسبات';
       case 'studio-photographer':
+      case 'studio_photographer':
         return 'مصور استوديو';
       case 'product-photographer':
+      case 'product_photographer':
         return 'مصور منتجات';
       default:
-        return 'مقدم خدمة';
+        return serviceType.isNotEmpty ? serviceType : 'مقدم خدمة';
     }
   }
 
   // الحصول على أيقونة الخدمة
   IconData getServiceIcon() {
-    switch (serviceType) {
+    switch (serviceType.toLowerCase()) {
       case 'photographer':
+      case 'photography':
       case 'event-photographer':
+      case 'event_photographer':
       case 'studio-photographer':
+      case 'studio_photographer':
       case 'product-photographer':
+      case 'product_photographer':
         return Icons.camera_alt;
       case 'video-editor':
+      case 'video_editor':
       case 'videographer':
         return Icons.video_camera_back;
       case 'photo-editor':
+      case 'photo_editor':
       case 'graphic-designer':
+      case 'graphic_designer':
         return Icons.edit;
       case 'printer':
+      case 'printing':
         return Icons.print;
       case 'drone-photographer':
+      case 'drone_photographer':
         return Icons.flight;
       default:
         return Icons.work;
@@ -186,21 +271,30 @@ class ProviderProfile {
 
   // الحصول على لون الخدمة
   Color getServiceColor() {
-    switch (serviceType) {
+    switch (serviceType.toLowerCase()) {
       case 'photographer':
+      case 'photography':
       case 'event-photographer':
+      case 'event_photographer':
       case 'studio-photographer':
+      case 'studio_photographer':
       case 'product-photographer':
+      case 'product_photographer':
         return const Color(0xFF3B82F6); // أزرق
       case 'video-editor':
+      case 'video_editor':
       case 'videographer':
         return const Color(0xFFEF4444); // أحمر
       case 'photo-editor':
+      case 'photo_editor':
       case 'graphic-designer':
+      case 'graphic_designer':
         return const Color(0xFF10B981); // أخضر
       case 'printer':
+      case 'printing':
         return const Color(0xFF8B5CF6); // بنفسجي
       case 'drone-photographer':
+      case 'drone_photographer':
         return const Color(0xFFF59E0B); // برتقالي
       default:
         return const Color(0xFF6B7280); // رمادي

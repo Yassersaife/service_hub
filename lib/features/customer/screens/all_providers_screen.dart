@@ -1,9 +1,8 @@
 // lib/features/customer/screens/all_providers_screen.dart
 import 'package:flutter/material.dart';
+import 'package:service_hub/features/service_provider/models/provider_profile.dart';
 import '../../service_provider/services/provider_service.dart';
-import '../../service_provider/models/provider_profile.dart';
 import '../../../core/utils/app_colors.dart';
-import '../../../widgets/rating_stars.dart';
 import 'provider_profile_screen.dart';
 
 class AllProvidersScreen extends StatefulWidget {
