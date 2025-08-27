@@ -46,7 +46,6 @@ class ProviderProfile {
     this.updatedAt,
   });
 
-  // نسخ مع تعديل
   ProviderProfile copyWith({
     String? userId,
     String? name,
@@ -93,25 +92,24 @@ class ProviderProfile {
     );
   }
 
-  // تحويل إلى JSON للإرسال إلى API
+  // تحويل إلى JSON بسيط
   Map<String, dynamic> toJson() {
     return {
       'user_id': userId,
-      'name': name,
-      'address': address,
-      'phone_number': phoneNumber,
-      'whatsapp_number': whatsappNumber,
+      'name': name ?? '',
+      'address': address ?? 'غير محدد',
+      'phone_number': phoneNumber ?? '',
+      'whatsapp_number': whatsappNumber ?? '',
       'service_type': serviceType,
       'city': city,
-      'description': description,
-      'profile_image': profileImage,
-      'portfolio_images': portfolioImages,
+      'description': description ?? 'لا يوجد وصف',
+      'work_hours': workHours ?? 'غير محدد',
+      'selected_services': [], // مطلوب في الـ API
+      'services_prices': {}, // مطلوب في الـ API
       'rating': rating,
       'reviews_count': reviewsCount,
-      'work_hours': workHours,
       'is_verified': isVerified,
-      'specialties': specialties,
-      'social_media': socialMedia,
+      'social_media': socialMedia.isNotEmpty ? socialMedia : {},
       'join_date': joinDate.toIso8601String(),
       'is_complete': isComplete,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
@@ -119,147 +117,70 @@ class ProviderProfile {
     };
   }
 
-  // إنشاء من JSON من API - تم إصلاحه
-  factory ProviderProfile.fromJson(Map<String, dynamic> json) {
-    // استخراج رابط صورة الملف الشخصي
-    String? profileImageUrl;
-    if (json['profile_image'] != null) {
-      final profileImageData = json['profile_image'];
-      if (profileImageData is Map<String, dynamic>) {
-        profileImageUrl = profileImageData['url'] as String? ??
-            profileImageData['placeholder'] as String?;
-      } else if (profileImageData is String) {
-        profileImageUrl = profileImageData;
+  // إنشاء من JSON بسيط
+  factory ProviderProfile.fromJson(dynamic json) {
+    // إذا كان json هو List، خذ أول عنصر
+    if (json is List && json.isNotEmpty) {
+      json = json.first;
+    }
+
+    // إذا لم يكن Map، ارجع profile فارغ
+    if (json is! Map<String, dynamic>) {
+      return ProviderProfile(
+        userId: '',
+        serviceType: '',
+        city: '',
+        joinDate: DateTime.now(),
+      );
+    }
+
+    // معالجة social_media بشكل آمن
+    Map<String, String> socialMediaMap = {};
+    if (json['social_media'] != null) {
+      if (json['social_media'] is Map) {
+        socialMediaMap = Map<String, String>.from(json['social_media']);
+      } else if (json['social_media'] is List) {
+        // إذا كان List فارغ، اتركه فارغ
+        socialMediaMap = {};
       }
     }
 
     return ProviderProfile(
       userId: json['user_id']?.toString() ?? json['id']?.toString() ?? '',
-      name: json['name'] as String?,
-      address: json['address'] as String?,
-      phoneNumber: json['phone'] as String?, // تغيير من phone_number إلى phone
-      whatsappNumber: json['whatsapp_number'] as String?,
-      serviceType: json['service_type'] as String? ?? '',
-      city: json['city'] as String? ?? '',
-      description: json['description'] as String?,
-      profileImage: profileImageUrl,
-      portfolioImages: _parsePortfolioImages(json['portfolio_images']),
-      rating: _parseDouble(json['rating']) ?? 0.0,
-      reviewsCount: json['reviews_count'] as int? ?? 0,
-      workHours: json['work_hours'] as String?,
-      isVerified: json['is_verified'] as bool? ?? false,
-      specialties: _parseStringList(json['specialties']),
-      socialMedia: _parseSocialMedia(json['social_media']),
-      joinDate: _parseDateTime(json['join_date']) ??
-          _parseDateTime(json['created_at']) ??
+      name: json['name']?.toString(),
+      address: json['address']?.toString(),
+      phoneNumber: json['phone_number']?.toString() ?? json['phone']?.toString(),
+      whatsappNumber: json['whatsapp_number']?.toString(),
+      serviceType: json['service_type']?.toString() ?? '',
+      city: json['city']?.toString() ?? '',
+      description: json['description']?.toString(),
+      profileImage: json['profile_image']?.toString(),
+      portfolioImages: (json['portfolio_images'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      rating: double.tryParse(json['rating']?.toString() ?? '0') ?? 0.0,
+      reviewsCount: int.tryParse(json['reviews_count']?.toString() ?? '0') ?? 0,
+      workHours: json['work_hours']?.toString(),
+      isVerified: json['is_verified'] == true || json['is_verified'] == 1,
+      specialties: (json['specialties'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      socialMedia: socialMediaMap,
+      joinDate: DateTime.tryParse(json['join_date']?.toString() ?? '') ??
+          DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
-      isComplete: json['is_complete'] as bool? ?? false,
-      createdAt: _parseDateTime(json['created_at']),
-      updatedAt: _parseDateTime(json['updated_at']),
+      isComplete: json['is_complete'] == true || json['is_complete'] == 1,
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
+      updatedAt: DateTime.tryParse(json['updated_at']?.toString() ?? ''),
     );
   }
 
-  // Helper method لاستخراج صور المعرض
-  static List<String> _parsePortfolioImages(dynamic value) {
-    if (value == null) return [];
-    if (value is List) {
-      return value.map((item) {
-        if (item is Map<String, dynamic>) {
-          return item['url'] as String? ??
-              item['path'] as String? ??
-              '';
-        }
-        return item.toString();
-      }).where((url) => url.isNotEmpty).toList();
-    }
-    return [];
-  }
-
-  // Helper methods لتحويل البيانات
-  static List<String> _parseStringList(dynamic value) {
-    if (value == null) return [];
-    if (value is List) {
-      return value.map((item) => item.toString()).toList();
-    }
-    if (value is String) {
-      try {
-        // إذا كانت JSON string
-        return List<String>.from(json.decode(value));
-      } catch (e) {
-        return [value];
-      }
-    }
-    return [];
-  }
-
-  static Map<String, String> _parseSocialMedia(dynamic value) {
-    if (value == null) return {};
-    if (value is Map) {
-      return Map<String, String>.from(value);
-    }
-    if (value is String) {
-      try {
-        return Map<String, String>.from(json.decode(value));
-      } catch (e) {
-        return {};
-      }
-    }
-    return {};
-  }
-
-  static double? _parseDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) {
-      return double.tryParse(value);
-    }
-    return null;
-  }
-
-  static DateTime? _parseDateTime(dynamic value) {
-    if (value == null) return null;
-    if (value is String) {
-      try {
-        return DateTime.parse(value);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  }
-
-  // باقي الدوال تبقى كما هي...
   String getServiceLabel() {
     switch (serviceType.toLowerCase()) {
-      case 'photographer':
-      case 'photography':
-        return 'مصور فوتوغرافي';
-      case 'video-editor':
-      case 'video_editor':
-      case 'videographer':
-        return 'محرر فيديو';
-      case 'photo-editor':
-      case 'photo_editor':
-        return 'محرر صور';
-      case 'printer':
-      case 'printing':
-        return 'مطبعة';
-      case 'graphic-designer':
-      case 'graphic_designer':
-        return 'مصمم جرافيك';
-      case 'drone-photographer':
-      case 'drone_photographer':
-        return 'مصور طائرات مسيرة';
-      case 'event-photographer':
-      case 'event_photographer':
-        return 'مصور مناسبات';
-      case 'studio-photographer':
-      case 'studio_photographer':
-        return 'مصور استوديو';
-      case 'product-photographer':
-      case 'product_photographer':
-        return 'مصور منتجات';
+      case 'photography-production':
+        return 'إنتاج تصوير';
+      case 'design-graphics':
+        return 'تصميم جرافيك';
+      case 'printing-office':
+        return 'مكتب طباعة';
+      case 'digital-services':
+        return 'خدمات رقمية';
       default:
         return serviceType.isNotEmpty ? serviceType : 'مقدم خدمة';
     }
@@ -267,65 +188,34 @@ class ProviderProfile {
 
   IconData getServiceIcon() {
     switch (serviceType.toLowerCase()) {
-      case 'photographer':
-      case 'photography':
-      case 'event-photographer':
-      case 'event_photographer':
-      case 'studio-photographer':
-      case 'studio_photographer':
-      case 'product-photographer':
-      case 'product_photographer':
+      case 'photography-production':
         return Icons.camera_alt;
-      case 'video-editor':
-      case 'video_editor':
-      case 'videographer':
-        return Icons.video_camera_back;
-      case 'photo-editor':
-      case 'photo_editor':
-      case 'graphic-designer':
-      case 'graphic_designer':
-        return Icons.edit;
-      case 'printer':
-      case 'printing':
+      case 'design-graphics':
+        return Icons.brush;
+      case 'printing-office':
         return Icons.print;
-      case 'drone-photographer':
-      case 'drone_photographer':
-        return Icons.flight;
+      case 'digital-services':
+        return Icons.computer;
       default:
-        return Icons.work;
+        return Icons.category;
     }
   }
 
   Color getServiceColor() {
     switch (serviceType.toLowerCase()) {
-      case 'photographer':
-      case 'photography':
-      case 'event-photographer':
-      case 'event_photographer':
-      case 'studio-photographer':
-      case 'studio_photographer':
-      case 'product-photographer':
-      case 'product_photographer':
+      case 'photography-production':
         return const Color(0xFF3B82F6);
-      case 'video-editor':
-      case 'video_editor':
-      case 'videographer':
-        return const Color(0xFFEF4444);
-      case 'photo-editor':
-      case 'photo_editor':
-      case 'graphic-designer':
-      case 'graphic_designer':
+      case 'design-graphics':
         return const Color(0xFF10B981);
-      case 'printer':
-      case 'printing':
+      case 'printing-office':
         return const Color(0xFF8B5CF6);
-      case 'drone-photographer':
-      case 'drone_photographer':
-        return const Color(0xFFF59E0B);
+      case 'digital-services':
+        return const Color(0xFF6B7280);
       default:
         return const Color(0xFF6B7280);
     }
   }
+
 
   String getExperienceText() {
     final now = DateTime.now();
@@ -335,8 +225,6 @@ class ProviderProfile {
       return 'أقل من سنة';
     } else if (experienceYears == 1) {
       return 'سنة واحدة';
-    } else if (experienceYears == 2) {
-      return 'سنتان';
     } else if (experienceYears <= 10) {
       return '$experienceYears سنوات';
     } else {
@@ -353,28 +241,9 @@ class ProviderProfile {
         serviceType.isNotEmpty;
   }
 
-  String getRatingText() {
-    if (rating >= 4.5) {
-      return 'ممتاز';
-    } else if (rating >= 4.0) {
-      return 'جيد جداً';
-    } else if (rating >= 3.5) {
-      return 'جيد';
-    } else if (rating >= 3.0) {
-      return 'مقبول';
-    } else {
-      return 'ضعيف';
-    }
-  }
-
-  int getExperienceYears() {
-    final now = DateTime.now();
-    return now.difference(joinDate).inDays ~/ 365;
-  }
-
   @override
   String toString() {
-    return 'ProviderProfile(userId: $userId, name: $name, serviceType: $serviceType, city: $city, rating: $rating)';
+    return 'ProviderProfile(userId: $userId, name: $name, serviceType: $serviceType, city: $city)';
   }
 
   @override

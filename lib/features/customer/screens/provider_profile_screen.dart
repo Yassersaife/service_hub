@@ -566,13 +566,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   const Color(0xFFE4405F), // Instagram brand color
                       () => _openInstagram(),
                 ),
-                const SizedBox(height: 8),
-                _buildContactButton(
-                  'LinkedIn',
-                  Icons.business,
-                  const Color(0xFF0077B5), // LinkedIn brand color
-                      () => _openLinkedIn(),
-                ),
               ],
             ),
           ),
@@ -603,27 +596,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('تعذر فتح Instagram'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  void _openLinkedIn() async {
-    const linkedInUrl = 'https://linkedin.com/in/your_profile'; // استبدل your_profile برابط البروفايل الخاص بك
-
-    try {
-      await launchUrl(
-        Uri.parse(linkedInUrl),
-        mode: LaunchMode.externalApplication,
-      );
-    } catch (e) {
-      // Handle error - show snackbar or toast
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تعذر فتح LinkedIn'),
             backgroundColor: Colors.red,
           ),
         );
@@ -751,7 +723,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   void _sendWhatsApp() async {
-    final phoneNumber = widget.provider.whatsappNumber ?? '970599123456';
+    final phoneNumber = widget.provider.whatsappNumber;
     final message = 'مرحباً ${widget.provider.name ?? ''}, أريد الاستفسار عن خدمة ${widget.provider.getServiceLabel()}';
     final Uri whatsappUri = Uri.parse(
         'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');

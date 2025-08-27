@@ -1,4 +1,3 @@
-// lib/features/auth/screens/login_screen.dart - Fixed
 import 'package:flutter/material.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
@@ -131,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             CustomTextField(
               label: 'البريد الإلكتروني',
-              hint: 'example@email.com',
+              hint: 'أدخل بريدك الالكتروني',
               icon: Icons.email,
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
@@ -247,7 +246,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() async {
-    // التحقق من صحة النموذج
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -268,7 +266,6 @@ class _LoginScreenState extends State<LoginScreen> {
         if (result.success) {
           final userName = AuthService.userName ?? 'المستخدم';
 
-          // إظهار رسالة ترحيب
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('مرحباً $userName'),
@@ -276,10 +273,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
 
-          // انتظار قليل لضمان تحميل البيانات
           await Future.delayed(const Duration(milliseconds: 500));
 
-          // الانتقال إلى Dashboard (سينتقل تلقائياً لصفحة الإعداد إذا لم يكن الملف مكتمل)
           if (mounted) {
             Navigator.pushAndRemoveUntil(
               context,

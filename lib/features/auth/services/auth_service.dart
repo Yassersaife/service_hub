@@ -55,7 +55,6 @@ class AuthService {
         ApiClient.setToken(token);
       }
 
-      // احفظ بيانات المستخدم
       if (response.data['user'] != null) {
         _currentUser = response.data['user'];
         await NetworkHelper.saveUserData(response.data['user']);

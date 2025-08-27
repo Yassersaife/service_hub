@@ -1,4 +1,3 @@
-// lib/features/service_provider/screens/provider_profile_setup_screen.dart - Updated with API
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:service_hub/core/utils/app_colors.dart';
@@ -8,8 +7,7 @@ import 'package:service_hub/widgets/custom_dropdown.dart';
 import 'package:service_hub/widgets/custom_text_field.dart';
 import 'package:service_hub/features/service_provider/services/provider_service.dart';
 import 'package:service_hub/features/service_provider/models/provider_profile.dart';
-import 'package:service_hub/services/services_api_service.dart';
-import 'package:service_hub/models/service_models.dart';
+import 'package:service_hub/core/network/api_client.dart';
 
 class ProviderProfileSetupScreen extends StatefulWidget {
   final ProviderProfile? existingProfile;
@@ -28,7 +26,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
   // Form controllers
   final _descriptionController = TextEditingController();
   final _workHoursController = TextEditingController();
-  final _addressController = TextEditingController(); // إضافة controller للعنوان
+  final _addressController = TextEditingController();
 
   // Form data
   String? _selectedService;
@@ -39,45 +37,82 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
   Map<String, String> _socialMedia = {};
 
   // API Data
-  List<Service> _availableServices = [];
+  List<Category> _availableCategories = [];
   List<String> _availableSpecialties = [];
-  bool _loadingServices = false;
+  bool _loadingCategories = false;
   bool _loadingSpecialties = false;
 
   bool _isLoading = false;
   int _currentStep = 0;
 
   final List<String> _cities = [
-    'نابلس', 'رام الله', 'القدس', 'الخليل', 'بيت لحم', 'جنين', 'طولكرم',
-    'قلقيلية', 'سلفيت', 'أريحا', 'طوباس', 'غزة', 'خان يونس', 'رفح', 'دير البلح'
+    "رام الله",
+    "القدس",
+    "بيت لحم",
+    "الخليل",
+    "نابلس",
+    "جنين",
+    "طولكرم",
+    "قلقيلية",
+    "سلفيت",
+    "أريحا",
+    "طوباس",
+    "غزة",
+    "الناصرة",
+    "حيفا",
+    "يافا",
+    "عكا",
+    "اللد",
+    "الرملة",
+    "سخنين",
+    "أم الفحم",
+    "رهط",
+    "شفاعمرو",
+    "طمرة",
   ];
+
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _loadServices();
+    _loadCategories();
 
     if (widget.existingProfile != null) {
       _loadExistingData();
     }
   }
 
-  Future<void> _loadServices() async {
+  Future<void> _loadCategories() async {
     setState(() {
-      _loadingServices = true;
+      _loadingCategories = true;
     });
 
     try {
-      final services = await ServicesApiService.getAllServices();
-      setState(() {
-        _availableServices = services;
-        _loadingServices = false;
-      });
+      final response = await ApiClient.get('/categories');
+
+      if (response.success && response.data != null) {
+        final categories = response.data as List;
+
+        setState(() {
+          _availableCategories = categories.map((category) => Category(
+            id: category['id'].toString(),
+            name: category['name'] ?? '',
+            slug: category['slug'] ?? '',
+          )).toList();
+          _loadingCategories = false;
+        });
+      } else {
+        setState(() {
+          _availableCategories = [];
+          _loadingCategories = false;
+        });
+      }
     } catch (e) {
-      print('Error loading services: $e');
+      print('Error loading categories: $e');
       setState(() {
-        _loadingServices = false;
+        _availableCategories = [];
+        _loadingCategories = false;
       });
     }
   }
@@ -86,18 +121,42 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
     setState(() {
       _loadingSpecialties = true;
       _availableSpecialties = [];
-      _specialties = []; // مسح التخصصات السابقة
+      _specialties = [];
     });
 
     try {
-      final specialties = await ServicesApiService.getSpecialtiesByService(serviceSlug);
-      setState(() {
-        _availableSpecialties = specialties;
-        _loadingSpecialties = false;
-      });
+      final response = await ApiClient.get('/categories/$serviceSlug');
+
+      if (response.success && response.data != null) {
+        final data = response.data;
+        final services = data['services'] as List?;
+
+        if (services != null) {
+          final specialties = services
+              .map((service) => service['name']?.toString() ?? '')
+              .where((name) => name.isNotEmpty)
+              .toList();
+
+          setState(() {
+            _availableSpecialties = specialties;
+            _loadingSpecialties = false;
+          });
+        } else {
+          setState(() {
+            _availableSpecialties = [];
+            _loadingSpecialties = false;
+          });
+        }
+      } else {
+        setState(() {
+          _availableSpecialties = [];
+          _loadingSpecialties = false;
+        });
+      }
     } catch (e) {
-      print('Error loading specialties: $e');
+      print('خطأ في تحميل التخصصات: $e');
       setState(() {
+        _availableSpecialties = [];
         _loadingSpecialties = false;
       });
     }
@@ -109,13 +168,12 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
     _selectedCity = profile.city;
     _descriptionController.text = profile.description ?? '';
     _workHoursController.text = profile.workHours ?? '';
-    _addressController.text = profile.address ?? ''; // تحميل العنوان
+    _addressController.text = profile.address ?? '';
     _profileImagePath = profile.profileImage;
     _portfolioImages = List.from(profile.portfolioImages);
     _specialties = List.from(profile.specialties);
     _socialMedia = Map.from(profile.socialMedia ?? {});
 
-    // تحميل التخصصات للخدمة المختارة
     if (_selectedService != null) {
       _loadSpecialtiesByService(_selectedService!);
     }
@@ -126,7 +184,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
     _tabController.dispose();
     _descriptionController.dispose();
     _workHoursController.dispose();
-    _addressController.dispose(); // إضافة dispose للعنوان
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -251,17 +309,14 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
           const SizedBox(height: 24),
 
-          // صورة البروفايل
           _buildProfileImageSection(),
 
           const SizedBox(height: 24),
 
-          // نوع الخدمة
           _buildServiceDropdown(),
 
           const SizedBox(height: 20),
 
-          // المدينة
           CustomDropdown(
             label: 'المدينة',
             hint: 'اختر مدينتك',
@@ -277,7 +332,6 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
           const SizedBox(height: 20),
 
-          // العنوان - حقل جديد
           CustomTextField(
             label: 'العنوان',
             hint: 'أدخل عنوانك التفصيلي',
@@ -287,7 +341,6 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
           const SizedBox(height: 20),
 
-          // وصف الخدمة
           CustomTextField(
             label: 'وصف الخدمة',
             hint: 'اكتب وصفاً مفصلاً عن خدمتك وخبرتك...',
@@ -298,7 +351,6 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
           const SizedBox(height: 20),
 
-          // ساعات العمل
           CustomTextField(
             label: 'ساعات العمل',
             hint: 'مثال: الأحد - الخميس: 9 صباحاً - 6 مساءً',
@@ -308,7 +360,6 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
           const SizedBox(height: 24),
 
-          // التخصصات - محدث ليكون dropdown
           _buildSpecialtiesSection(),
         ],
       ),
@@ -352,7 +403,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
           ),
           child: DropdownButtonFormField<String>(
             value: _selectedService,
-            hint: _loadingServices
+            hint: _loadingCategories
                 ? const Row(
               children: [
                 SizedBox(
@@ -372,16 +423,16 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
                 vertical: 16,
               ),
             ),
-            items: _loadingServices ? [] : _availableServices.map((Service service) {
+            items: _loadingCategories ? [] : _availableCategories.map((Category category) {
               return DropdownMenuItem<String>(
-                value: service.slug,
-                child: Text(service.name),
+                value: category.slug,
+                child: Text(category.name),
               );
             }).toList(),
-            onChanged: _loadingServices ? null : (value) {
+            onChanged: _loadingCategories ? null : (value) {
               setState(() {
                 _selectedService = value;
-                _specialties.clear(); // مسح التخصصات السابقة
+                _specialties.clear();
               });
 
               if (value != null) {
@@ -471,12 +522,10 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
           const SizedBox(height: 24),
 
-          // زر إضافة صور
           _buildAddPhotosButton(),
 
           const SizedBox(height: 20),
 
-          // معرض الصور
           if (_portfolioImages.isEmpty)
             _buildEmptyPortfolio()
           else
@@ -982,7 +1031,6 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
   void _nextStep() {
     if (_currentStep == 0) {
-      // التحقق من البيانات الأساسية
       if (_selectedService == null ||
           _selectedCity == null ||
           _descriptionController.text.isEmpty) {
@@ -1016,49 +1064,71 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
       _isLoading = true;
     });
 
-    final user = AuthService.currentUser!;
+    try {
+      final user = AuthService.currentUser!;
 
-    final profile = ProviderProfile(
-      userId: user['id'],
-      name: user['name'], // نحصل على الاسم من بيانات المستخدم
-      serviceType: _selectedService!,
-      city: _selectedCity!,
-      address: _addressController.text.isNotEmpty ? _addressController.text : null, // إضافة العنوان
-      description: _descriptionController.text,
-      profileImage: _profileImagePath,
-      portfolioImages: _portfolioImages,
-      workHours: _workHoursController.text.isNotEmpty ? _workHoursController.text : null,
-      specialties: _specialties,
-      socialMedia: _socialMedia,
-      isComplete: true,
-      joinDate: widget.existingProfile?.joinDate ?? DateTime.now(),
-      rating: widget.existingProfile?.rating ?? 0.0,
-      reviewsCount: widget.existingProfile?.reviewsCount ?? 0,
-      isVerified: widget.existingProfile?.isVerified ?? false,
-    );
-
-    final success = await _providerService.saveProfile(profile);
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم حفظ الملف الشخصي بنجاح'),
-          backgroundColor: AppColors.secondary,
-        ),
+      final profile = ProviderProfile(
+        userId: user['id'].toString(),
+        name: user['name']?.toString(),
+        serviceType: _selectedService!,
+        city: _selectedCity!,
+        address: _addressController.text.isNotEmpty ? _addressController.text : null,
+        description: _descriptionController.text,
+        profileImage: _profileImagePath,
+        portfolioImages: _portfolioImages,
+        workHours: _workHoursController.text.isNotEmpty ? _workHoursController.text : null,
+        specialties: _specialties,
+        socialMedia: _socialMedia,
+        isComplete: false,
+        joinDate: widget.existingProfile?.joinDate ?? DateTime.now(),
+        rating: widget.existingProfile?.rating ?? 0.0,
+        reviewsCount: widget.existingProfile?.reviewsCount ?? 0,
+        isVerified: widget.existingProfile?.isVerified ?? false,
       );
 
-      Navigator.pop(context, true);
-    } else {
+
+      final success = await _providerService.saveProfile(profile);
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم حفظ الملف الشخصي بنجاح'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('فشل في حفظ الملف الشخصي'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('خطأ في حفظ الملف الشخصي: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('حدث خطأ أثناء حفظ الملف الشخصي'),
-          backgroundColor: AppColors.error,
+        SnackBar(
+          content: Text('حدث خطأ: ${e.toString()}'),
+          backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+}
+
+class Category {
+  final String id;
+  final String name;
+  final String slug;
+
+  Category({
+    required this.id,
+    required this.name,
+    required this.slug,
+  });
 }

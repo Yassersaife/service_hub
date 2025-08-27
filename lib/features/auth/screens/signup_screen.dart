@@ -159,7 +159,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             // البريد الإلكتروني
             CustomTextField(
               label: 'البريد الإلكتروني',
-              hint: 'example@email.com',
+              hint: 'ادخل بريدك الاكتروني',
               icon: Icons.email,
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
@@ -336,10 +336,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _handleSignUp() async {
-    // التحقق من صحة النموذج
     if (!_formKey.currentState!.validate()) return;
 
-    // التحقق من تطابق كلمات المرور
     if (_passwordController.text != _confirmPasswordController.text) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -352,7 +350,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    // التحقق من قوة كلمة المرور
     if (_passwordController.text.length < 8) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -370,7 +367,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      // إجراء التسجيل
       final result = await AuthService.register(
         name: _nameController.text.trim(),
         email: _emailController.text.trim().toLowerCase(),
@@ -385,7 +381,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         });
 
         if (result.success) {
-          // إظهار رسالة نجاح
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('تم إنشاء حسابك بنجاح!'),
@@ -393,10 +388,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           );
 
-          // انتظار قليل لضمان تحميل البيانات
           await Future.delayed(const Duration(milliseconds: 500));
 
-          // الانتقال إلى Dashboard (سينتقل تلقائياً لصفحة الإعداد إذا لم يكن الملف مكتمل)
           if (mounted) {
             Navigator.pushAndRemoveUntil(
               context,
@@ -407,7 +400,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             );
           }
         } else {
-          // إظهار رسالة خطأ
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(result.message),

@@ -1,53 +1,186 @@
-
 import 'package:service_hub/core/network/api_client.dart';
-import 'package:service_hub/core/network/api_urls.dart';
 import 'package:service_hub/features/service_provider/models/provider_profile.dart';
+import 'package:service_hub/features/auth/services/auth_service.dart';
 
 class ProviderService {
   static final ProviderService _instance = ProviderService._internal();
   factory ProviderService() => _instance;
   ProviderService._internal();
 
-  Future<ProviderProfile?> getProfile(String userId) async {
-    try {
-      final response = await ApiClient.get('/providers/profile/$userId');
-
-      if (response.success && response.data != null) {
-        return ProviderProfile.fromJson(response.data);
-      }
-      return null;
-    } catch (e) {
-      print('Error getting provider profile: $e');
-      return null;
-    }
-  }
-
-  /// إنشاء أو تحديث الملف الشخصي
   Future<bool> saveProfile(ProviderProfile profile) async {
     try {
-      final response = await ApiClient.post('/providers/profile', profile.toJson());
-      return response.success;
+      print('حفظ الملف الشخصي لـ: ${profile.userId}');
+
+      // تحقق إذا كان يوجد profile مسبقاً
+      final existingProfile = await getMyProfile();
+
+      if (existingProfile != null) {
+        print('تحديث الملف الشخصي الموجود');
+        return await updateProfile(profile);
+      } else {
+        print('إنشاء ملف شخصي جديد');
+        return await createProfile(profile);
+      }
     } catch (e) {
-      print('Error saving provider profile: $e');
+      print('خطأ في saveProfile: $e');
       return false;
     }
   }
 
-  /// حذف الملف الشخصي
-  Future<bool> deleteProfile(String userId) async {
+  /// إنشاء ملف شخصي جديد
+  Future<bool> createProfile(ProviderProfile profile) async {
     try {
-      final response = await ApiClient.delete('/providers/profile/$userId');
+      final response = await ApiClient.post('/providers', profile.toJson());
+
+      print('نتيجة الإنشاء: ${response.success}');
+      if (!response.success) {
+        print('خطأ في الإنشاء: ${response.message}');
+      }
+
       return response.success;
     } catch (e) {
-      print('Error deleting provider profile: $e');
+      print('خطأ في createProfile: $e');
       return false;
     }
   }
 
-  /// الحصول على جميع مقدمي الخدمات
+  /// تحديث الملف الشخصي
+  Future<bool> updateProfile(ProviderProfile profile) async {
+    try {
+      // حسب الـ Laravel routes، استخدم endpoint بدون ID
+      final response = await ApiClient.put('/providers/1', profile.toJson());
+
+      print('نتيجة التحديث: ${response.success}');
+      if (!response.success) {
+        print('خطأ في التحديث: ${response.message}');
+      }
+
+      return response.success;
+    } catch (e) {
+      print('خطأ في updateProfile: $e');
+      return false;
+    }
+  }
+
+  /// جلب ملفي الشخصي
+  Future<ProviderProfile?> getMyProfile() async {
+    try {
+      final user = AuthService.currentUser;
+      if (user == null) {
+        print('لا يوجد مستخدم مسجل دخول');
+        return null;
+      }
+
+      print('جلب الملف الشخصي للمستخدم: ${user['id']}');
+
+      // الـ endpoint الصحيح من routes
+      final response = await ApiClient.get('/providers/my/profile');
+
+      if (response.success && response.data != null) {
+        print('البيانات المستلمة: ${response.data}');
+        print('نوع البيانات: ${response.data.runtimeType}');
+
+        // استخدام fromJson اللي يتعامل مع List و Map
+        final profile = ProviderProfile.fromJson(response.data);
+
+        if (profile.userId.isNotEmpty) {
+          print('تم جلب الملف الشخصي: ${profile.name}');
+          return profile;
+        }
+      }
+
+      print('لا يوجد ملف شخصي');
+      return null;
+    } catch (e) {
+      print('خطأ في getMyProfile: $e');
+      return null;
+    }
+  }
+
+  /// جلب ملف شخصي بالـ ID
+  Future<ProviderProfile?> getProfile(String userId) async {
+    try {
+      print('جلب الملف الشخصي للمستخدم: $userId');
+
+      final userIdString = userId.toString();
+      final response = await ApiClient.get('/providers/$userIdString');
+
+      if (response.success && response.data != null) {
+        print('البيانات المستلمة: ${response.data}');
+
+        // استخدام fromJson اللي يتعامل مع List و Map
+        final profile = ProviderProfile.fromJson(response.data);
+
+        if (profile.userId.isNotEmpty) {
+          print('تم جلب الملف الشخصي: ${profile.name}');
+          return profile;
+        }
+      }
+
+      print('لا يوجد ملف شخصي للمستخدم: $userIdString');
+      return null;
+    } catch (e) {
+      print('خطأ في getProfile: $e');
+      return null;
+    }
+  }
+
+  /// جلب جميع مقدمي الخدمات
   Future<List<ProviderProfile>> getAllProviders() async {
     try {
-      final response = await ApiClient.get(ApiUrls.providers);
+      final response = await ApiClient.get('/providers');
+
+      if (response.success && response.data != null) {
+        final List<dynamic> providersData = response.data;
+        final List<ProviderProfile> profiles = [];
+
+        for (final data in providersData) {
+          try {
+            final profile = ProviderProfile.fromJson(data);
+            if (profile.isProfileComplete) {
+              profiles.add(profile);
+            }
+          } catch (e) {
+            print('تجاهل ملف شخصي: $e');
+            continue;
+          }
+        }
+
+        return profiles;
+      }
+
+      return [];
+    } catch (e) {
+      print('خطأ في getAllProviders: $e');
+      return [];
+    }
+  }
+
+  /// البحث عن مقدمي الخدمات
+  Future<List<ProviderProfile>> searchProviders({
+    String? query,
+    String? serviceType,
+    String? city,
+  }) async {
+    try {
+      String searchUrl = '/providers/search';
+      final params = <String>[];
+
+      if (query != null && query.isNotEmpty) {
+        params.add('q=${Uri.encodeComponent(query)}');
+      }
+      if (serviceType != null && serviceType.isNotEmpty) {
+        params.add('service_type=${Uri.encodeComponent(serviceType)}');
+      }
+      if (city != null && city.isNotEmpty) {
+        params.add('city=${Uri.encodeComponent(city)}');
+      }
+
+      if (params.isNotEmpty) {
+        searchUrl += '?${params.join('&')}';
+      }
+
+      final response = await ApiClient.get(searchUrl);
 
       if (response.success && response.data != null) {
         final List<dynamic> providersData = response.data;
@@ -58,154 +191,29 @@ class ProviderService {
             final profile = ProviderProfile.fromJson(data);
             profiles.add(profile);
           } catch (e) {
-            // تجاهل البيانات التي لا يمكن تحويلها
+            print('تجاهل نتيجة بحث: $e');
             continue;
           }
         }
 
-        return profiles.where((profile) => profile.isComplete).toList();
+        return profiles;
       }
 
       return [];
     } catch (e) {
-      return [];
-    }
-  }
-  /// البحث عن مقدمي الخدمات
-  Future<List<ProviderProfile>> searchProviders({
-    String? query,
-    String? serviceType,
-    String? city,
-  }) async {
-    try {
-      final params = <String, dynamic>{};
-
-      if (query != null && query.isNotEmpty) params['q'] = query;
-      if (serviceType != null) params['service_type'] = serviceType;
-      if (city != null) params['city'] = city;
-
-      final searchUrl = ApiUrls.withParams(ApiUrls.searchProviders, params);
-      final response = await ApiClient.get(searchUrl);
-
-      if (response.success && response.data != null) {
-        final List<dynamic> providersData = response.data;
-        return providersData
-            .map((data) => ProviderProfile.fromJson(data))
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      print('Error searching providers: $e');
+      print('خطأ في البحث: $e');
       return [];
     }
   }
 
-  /// الحصول على مقدمي الخدمات حسب النوع
-  Future<List<ProviderProfile>> getProvidersByType(String serviceType) async {
+  /// حذف الملف الشخصي
+  Future<bool> deleteProfile(String userId) async {
     try {
-      final response = await ApiClient.get('/providers?service_type=$serviceType');
-
-      if (response.success && response.data != null) {
-        final List<dynamic> providersData = response.data;
-        return providersData
-            .map((data) => ProviderProfile.fromJson(data))
-            .where((profile) => profile.isComplete)
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      print('Error getting providers by type: $e');
-      return [];
-    }
-  }
-
-  /// الحصول على مقدمي الخدمات حسب المدينة
-  Future<List<ProviderProfile>> getProvidersByCity(String city) async {
-    try {
-      final response = await ApiClient.get('/providers?city=$city');
-
-      if (response.success && response.data != null) {
-        final List<dynamic> providersData = response.data;
-        return providersData
-            .map((data) => ProviderProfile.fromJson(data))
-            .where((profile) => profile.isComplete)
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      print('Error getting providers by city: $e');
-      return [];
-    }
-  }
-
-  /// الحصول على أفضل مقدمي الخدمات
-  Future<List<ProviderProfile>> getTopRatedProviders({int limit = 10}) async {
-    try {
-      final response = await ApiClient.get(ApiUrls.featuredProviders);
-
-      if (response.success && response.data != null) {
-        final List<dynamic> providersData = response.data;
-        List<ProviderProfile> providers = providersData
-            .map((data) => ProviderProfile.fromJson(data))
-            .where((profile) => profile.isComplete)
-            .toList();
-
-        // ترتيب حسب التقييم
-        providers.sort((a, b) => b.rating.compareTo(a.rating));
-        return providers.take(limit).toList();
-      }
-      return [];
-    } catch (e) {
-      print('Error getting top rated providers: $e');
-      return [];
-    }
-  }
-
-  /// الحصول على مقدمي الخدمات الموثقين
-  Future<List<ProviderProfile>> getVerifiedProviders() async {
-    try {
-      final response = await ApiClient.get('/providers?verified=1');
-
-      if (response.success && response.data != null) {
-        final List<dynamic> providersData = response.data;
-        return providersData
-            .map((data) => ProviderProfile.fromJson(data))
-            .where((profile) => profile.isComplete && profile.isVerified)
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      print('Error getting verified providers: $e');
-      return [];
-    }
-  }
-
-  /// الحصول على مقدم خدمة واحد بالـ ID
-  Future<ProviderProfile?> getProviderById(String providerId) async {
-    try {
-      final response = await ApiClient.get(ApiUrls.providerById(providerId));
-
-      if (response.success && response.data != null) {
-        return ProviderProfile.fromJson(response.data);
-      }
-      return null;
-    } catch (e) {
-      print('Error getting provider by ID: $e');
-      return null;
-    }
-  }
-
-  /// إضافة تقييم لمقدم خدمة
-  Future<bool> addRating(String providerId, double rating, {String? review}) async {
-    try {
-      final response = await ApiClient.post('/providers/$providerId/rating', {
-        'rating': rating,
-        if (review != null) 'review': review,
-      });
-
+      final userIdString = userId.toString();
+      final response = await ApiClient.delete('/providers/profile/$userIdString');
       return response.success;
     } catch (e) {
-      print('Error adding rating: $e');
+      print('خطأ في deleteProfile: $e');
       return false;
     }
   }
@@ -213,169 +221,100 @@ class ProviderService {
   /// تحديث حالة التوثيق
   Future<bool> updateVerificationStatus(String providerId, bool isVerified) async {
     try {
-      final response = await ApiClient.put('/providers/$providerId/verify', {
+      final providerIdString = providerId.toString();
+      final response = await ApiClient.put('/providers/$providerIdString/verify', {
         'is_verified': isVerified,
       });
-
       return response.success;
     } catch (e) {
-      print('Error updating verification status: $e');
+      print('خطأ في updateVerificationStatus: $e');
       return false;
     }
   }
 
-  /// الحصول على إحصائيات عامة
-  Future<Map<String, dynamic>> getStatistics() async {
+  /// الحصول على أفضل مقدمي الخدمات
+  Future<List<ProviderProfile>> getTopRatedProviders({int limit = 10}) async {
     try {
-      final response = await ApiClient.get('/providers/statistics');
-
-      if (response.success && response.data != null) {
-        return response.data;
-      }
-      return {};
-    } catch (e) {
-      print('Error getting statistics: $e');
-      return {};
-    }
-  }
-
-  /// تصفية متقدمة
-  Future<List<ProviderProfile>> advancedSearch({
-    String? query,
-    String? serviceType,
-    String? city,
-    double? minRating,
-    bool? isVerified,
-    String? sortBy,
-    bool ascending = true,
-  }) async {
-    try {
-      final params = <String, dynamic>{};
-
-      if (query != null && query.isNotEmpty) params['q'] = query;
-      if (serviceType != null) params['service_type'] = serviceType;
-      if (city != null) params['city'] = city;
-      if (minRating != null) params['min_rating'] = minRating;
-      if (isVerified != null) params['verified'] = isVerified ? 1 : 0;
-      if (sortBy != null) {
-        params['sort_by'] = sortBy;
-        params['sort_order'] = ascending ? 'asc' : 'desc';
-      }
-
-      final searchUrl = ApiUrls.withParams('/providers/advanced-search', params);
-      final response = await ApiClient.get(searchUrl);
+      final response = await ApiClient.get('/providers/top-rated?limit=$limit');
 
       if (response.success && response.data != null) {
         final List<dynamic> providersData = response.data;
-        return providersData
-            .map((data) => ProviderProfile.fromJson(data))
-            .toList();
+        final List<ProviderProfile> profiles = [];
+
+        for (final data in providersData) {
+          try {
+            final profile = ProviderProfile.fromJson(data);
+            if (profile.isProfileComplete) {
+              profiles.add(profile);
+            }
+          } catch (e) {
+            print('تجاهل مقدم خدمة مميز: $e');
+            continue;
+          }
+        }
+
+        // ترتيب حسب التقييم
+        profiles.sort((a, b) => b.rating.compareTo(a.rating));
+        return profiles.take(limit).toList();
       }
+
       return [];
     } catch (e) {
-      print('Error in advanced search: $e');
+      print('خطأ في getTopRatedProviders: $e');
       return [];
     }
   }
 
-  /// رفع صورة للملف الشخصي
-  Future<String?> uploadProfileImage(String filePath) async {
+  /// الحصول على مقدمي الخدمات الموثقين
+  Future<List<ProviderProfile>> getVerifiedProviders() async {
     try {
-      // هنا يمكنك إضافة كود رفع الصورة
-      // مثال باستخدام multipart request
-
-      // final request = http.MultipartRequest('POST', Uri.parse('${ApiClient.baseUrl}/upload/profile-image'));
-      // request.files.add(await http.MultipartFile.fromPath('image', filePath));
-      // request.headers.addAll(ApiClient._headers);
-
-      // final response = await request.send();
-      // if (response.statusCode == 200) {
-      //   final responseData = await response.stream.bytesToString();
-      //   final jsonData = json.decode(responseData);
-      //   return jsonData['data']['url'];
-      // }
-
-      return null;
-    } catch (e) {
-      print('Error uploading profile image: $e');
-      return null;
-    }
-  }
-
-  /// رفع صورة للمعرض
-  Future<String?> uploadPortfolioImage(String filePath) async {
-    try {
-      // مثل uploadProfileImage ولكن لصور المعرض
-      return null;
-    } catch (e) {
-      print('Error uploading portfolio image: $e');
-      return null;
-    }
-  }
-
-  /// الحصول على مقدمي الخدمات لفئة معينة
-  Future<List<ProviderProfile>> getProvidersByCategory(String categoryId) async {
-    try {
-      final response = await ApiClient.get(ApiUrls.categoryProviders(categoryId));
+      final response = await ApiClient.get('/providers/verified');
 
       if (response.success && response.data != null) {
         final List<dynamic> providersData = response.data;
-        return providersData
-            .map((data) => ProviderProfile.fromJson(data))
-            .toList();
+        final List<ProviderProfile> profiles = [];
+
+        for (final data in providersData) {
+          try {
+            final profile = ProviderProfile.fromJson(data);
+            if (profile.isVerified && profile.isProfileComplete) {
+              profiles.add(profile);
+            }
+          } catch (e) {
+            print('تجاهل مقدم خدمة موثق: $e');
+            continue;
+          }
+        }
+
+        return profiles;
       }
+
       return [];
     } catch (e) {
-      print('Error getting providers by category: $e');
+      print('خطأ في getVerifiedProviders: $e');
       return [];
     }
   }
 
-  /// الحصول على مقدمي خدمة لخدمة معينة
-  Future<List<ProviderProfile>> getProvidersByService(String serviceId) async {
+  /// التحقق من وجود ملف شخصي
+  Future<bool> hasProfile() async {
     try {
-      final response = await ApiClient.get(ApiUrls.serviceProviders(serviceId));
-
-      if (response.success && response.data != null) {
-        final List<dynamic> providersData = response.data;
-        return providersData
-            .map((data) => ProviderProfile.fromJson(data))
-            .toList();
-      }
-      return [];
+      final profile = await getMyProfile();
+      return profile != null;
     } catch (e) {
-      print('Error getting providers by service: $e');
-      return [];
-    }
-  }
-
-  /// تحديث خدمات مقدم الخدمة
-  Future<bool> updateProviderServices(String providerId, List<String> serviceIds) async {
-    try {
-      final response = await ApiClient.put(ApiUrls.updateServices, {
-        'provider_id': providerId,
-        'service_ids': serviceIds,
-      });
-
-      return response.success;
-    } catch (e) {
-      print('Error updating provider services: $e');
+      print('خطأ في hasProfile: $e');
       return false;
     }
   }
 
-  /// الحصول على ملف مقدم الخدمة الخاص بي
-  Future<ProviderProfile?> getMyProfile() async {
+  /// التحقق من اكتمال الملف الشخصي
+  Future<bool> isProfileComplete() async {
     try {
-      final response = await ApiClient.get(ApiUrls.myProfile);
-
-      if (response.success && response.data != null) {
-        return ProviderProfile.fromJson(response.data);
-      }
-      return null;
+      final profile = await getMyProfile();
+      return profile?.isProfileComplete ?? false;
     } catch (e) {
-      print('Error getting my profile: $e');
-      return null;
+      print('خطأ في isProfileComplete: $e');
+      return false;
     }
   }
 }

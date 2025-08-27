@@ -42,25 +42,26 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       final user = AuthService.currentUser;
 
       if (user != null) {
-        print('Current user: ${user['name']} (${user['id']})');
+        print('المستخدم الحالي: ${user['name']} (${user['id']})');
 
-        // محاولة جلب الملف الشخصي
         ProviderProfile? profile;
 
+        // محاولة جلب الملف الشخصي
         try {
           profile = await _providerService.getMyProfile();
-          print('Got profile from getMyProfile: ${profile?.name}');
+          print('تم جلب الملف الشخصي من getMyProfile: ${profile?.name}');
         } catch (e) {
-          print('getMyProfile failed: $e');
+          print('فشل getMyProfile: $e');
         }
 
-        // إذا فشل، جرب بالـ user ID
+        // إذا فشل، جرب بالـ user ID مع تحويل إلى String
         if (profile == null) {
           try {
-            profile = await _providerService.getProfile(user['id']);
-            print('Got profile from getProfile: ${profile?.name}');
+            final userIdString = user['id'].toString();
+            profile = await _providerService.getProfile(userIdString);
+            print('تم جلب الملف الشخصي من getProfile: ${profile?.name}');
           } catch (e) {
-            print('getProfile failed: $e');
+            print('فشل getProfile: $e');
           }
         }
 
@@ -71,7 +72,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           });
         }
       } else {
-        print('No current user found');
+        print('لا يوجد مستخدم مسجل دخول');
         if (mounted) {
           setState(() {
             _errorMessage = 'خطأ في بيانات المستخدم';
@@ -80,17 +81,16 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         }
       }
     } catch (e) {
-      print('Error in _loadProfile: $e');
+      print('خطأ في _loadProfile: $e');
       if (mounted) {
         setState(() {
-          _errorMessage = null; // نزيل رسالة الخطأ لأننا سنعرض شاشة الإعداد
+          _errorMessage = null;
           _profile = null;
           _isLoading = false;
         });
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -152,7 +152,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       );
     }
 
-    // إذا لم يكن هناك profile أو كان غير مكتمل، اعرض شاشة الترحيب
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
