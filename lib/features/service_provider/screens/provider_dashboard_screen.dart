@@ -1,9 +1,11 @@
+// lib/features/service_provider/screens/provider_dashboard_screen.dart - Fixed
 import 'package:flutter/material.dart';
 import 'package:service_hub/core/utils/app_colors.dart';
 import 'package:service_hub/features/auth/screens/login_screen.dart';
 import 'package:service_hub/features/auth/services/auth_service.dart';
 import 'package:service_hub/features/service_provider/models/provider_profile.dart';
 import 'package:service_hub/features/service_provider/services/provider_service.dart';
+import 'package:service_hub/screens/welcome_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'provider_profile_setup_screen.dart';
 
@@ -38,10 +40,29 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
     try {
       final user = AuthService.currentUser;
+
       if (user != null) {
-        // جرب أولاً الحصول على الملف الشخصي من endpoint الخاص بي
-        final profile = await _providerService.getMyProfile() ??
-            await _providerService.getProfile(user['id']);
+        print('Current user: ${user['name']} (${user['id']})');
+
+        // محاولة جلب الملف الشخصي
+        ProviderProfile? profile;
+
+        try {
+          profile = await _providerService.getMyProfile();
+          print('Got profile from getMyProfile: ${profile?.name}');
+        } catch (e) {
+          print('getMyProfile failed: $e');
+        }
+
+        // إذا فشل، جرب بالـ user ID
+        if (profile == null) {
+          try {
+            profile = await _providerService.getProfile(user['id']);
+            print('Got profile from getProfile: ${profile?.name}');
+          } catch (e) {
+            print('getProfile failed: $e');
+          }
+        }
 
         if (mounted) {
           setState(() {
@@ -50,6 +71,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           });
         }
       } else {
+        print('No current user found');
         if (mounted) {
           setState(() {
             _errorMessage = 'خطأ في بيانات المستخدم';
@@ -58,13 +80,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         }
       }
     } catch (e) {
+      print('Error in _loadProfile: $e');
       if (mounted) {
         setState(() {
-          _errorMessage = 'حدث خطأ في تحميل البيانات';
+          _errorMessage = null; // نزيل رسالة الخطأ لأننا سنعرض شاشة الإعداد
+          _profile = null;
           _isLoading = false;
         });
       }
-      print('Error loading profile: $e');
     }
   }
 
@@ -129,17 +152,29 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       );
     }
 
+    // إذا لم يكن هناك profile أو كان غير مكتمل، اعرض شاشة الترحيب
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadProfile,
-          child: _profile == null || !_profile!.isProfileComplete
+          child: _shouldShowWelcomeScreen()
               ? _buildWelcomeScreen()
               : _buildDashboard(),
         ),
       ),
     );
+  }
+
+  // تحقق إذا كان يجب عرض شاشة الترحيب
+  bool _shouldShowWelcomeScreen() {
+    // إذا لم يكن هناك profile
+    if (_profile == null) return true;
+
+    // إذا كان الـ profile غير مكتمل
+    if (!_profile!.isProfileComplete) return true;
+
+    return false;
   }
 
   Widget _buildWelcomeScreen() {
@@ -155,6 +190,25 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
+          // إضافة AppBar منفصل
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'إعداد الحساب',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout, color: Color(0xFF64748B)),
+                onPressed: _handleLogout,
+              ),
+            ],
+          ),
+
           const SizedBox(height: 40),
           _buildWelcomeHeader(user['name']?.toString() ?? 'المستخدم'),
           const SizedBox(height: 40),
@@ -206,9 +260,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'تم إنشاء حسابك بنجاح\nلنقم بإعداد ملفك الشخصي',
-            style: TextStyle(
+          Text(
+            _profile == null
+                ? 'تم إنشاء حسابك بنجاح\nلنقم بإعداد ملفك الشخصي'
+                : 'لنكمل إعداد ملفك الشخصي\nلجذب المزيد من العملاء',
+            style: const TextStyle(
               fontSize: 16,
               color: Colors.white70,
               height: 1.5,
@@ -359,7 +415,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             final result = await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const ProviderProfileSetupScreen(),
+                builder: (context) => ProviderProfileSetupScreen(
+                  existingProfile: _profile,
+                ),
               ),
             );
 
@@ -368,9 +426,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             }
           },
           icon: const Icon(Icons.arrow_forward, color: Colors.white),
-          label: const Text(
-            'ابدأ إعداد الملف الشخصي',
-            style: TextStyle(
+          label: Text(
+            _profile == null ? 'ابدأ إعداد الملف الشخصي' : 'أكمل إعداد الملف الشخصي',
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -827,7 +885,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
         );
       }
     }

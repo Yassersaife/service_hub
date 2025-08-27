@@ -1,4 +1,4 @@
-// lib/features/auth/screens/signup_screen.dart
+// lib/features/auth/screens/signup_screen.dart - Fixed
 import 'package:flutter/material.dart';
 import 'package:service_hub/features/service_provider/screens/provider_dashboard_screen.dart';
 import '../../../core/utils/app_colors.dart';
@@ -58,18 +58,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: Column(
             children: [
               const SizedBox(height: 20),
-
-              // هيدر توضيحي
               _buildProviderHeader(),
-
               const SizedBox(height: 30),
-
-              // نموذج التسجيل
               _buildSignUpForm(),
-
               const SizedBox(height: 20),
-
-              // رابط تسجيل الدخول
               _buildLoginLink(),
             ],
           ),
@@ -296,7 +288,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
-                      'ستحتاج لتأكيد بريدك الإلكتروني قبل البدء',
+                      'يمكنك إضافة معلومات ملفك الشخصي لاحقاً',
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF475569),
@@ -344,8 +336,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _handleSignUp() async {
+    // التحقق من صحة النموذج
     if (!_formKey.currentState!.validate()) return;
 
+    // التحقق من تطابق كلمات المرور
     if (_passwordController.text != _confirmPasswordController.text) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -358,6 +352,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
+    // التحقق من قوة كلمة المرور
     if (_passwordController.text.length < 8) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -375,6 +370,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
+      // إجراء التسجيل
       final result = await AuthService.register(
         name: _nameController.text.trim(),
         email: _emailController.text.trim().toLowerCase(),
@@ -389,23 +385,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
         });
 
         if (result.success) {
-          // Navigate to dashboard
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const ProviderDashboardScreen(),
-            ),
-          );
-
-          // Show success message
+          // إظهار رسالة نجاح
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('تم إنشاء حسابك بنجاح!'),
               backgroundColor: AppColors.success,
             ),
           );
+
+          // انتظار قليل لضمان تحميل البيانات
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          // الانتقال إلى Dashboard (سينتقل تلقائياً لصفحة الإعداد إذا لم يكن الملف مكتمل)
+          if (mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProviderDashboardScreen(),
+              ),
+                  (route) => false,
+            );
+          }
         } else {
-          // Show error message
+          // إظهار رسالة خطأ
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(result.message),
@@ -415,6 +417,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         }
       }
     } catch (e) {
+      print('SignUp error: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;

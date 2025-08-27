@@ -1,4 +1,4 @@
-// lib/features/auth/screens/login_screen.dart
+// lib/features/auth/screens/login_screen.dart - Fixed
 import 'package:flutter/material.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
@@ -17,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -248,44 +247,72 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _handleLogin() async {
+    // التحقق من صحة النموذج
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
     });
 
-    final result = await AuthService.login(
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (result.success) {
-      final userName = AuthService.userName ?? 'المستخدم';
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ProviderDashboardScreen(),
-        ),
+    try {
+      final result = await AuthService.login(
+        email: _emailController.text.trim().toLowerCase(),
+        password: _passwordController.text,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('مرحباً $userName'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.message),
-          backgroundColor: Colors.red, // أو AppColors.error
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (result.success) {
+          final userName = AuthService.userName ?? 'المستخدم';
+
+          // إظهار رسالة ترحيب
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('مرحباً $userName'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // انتظار قليل لضمان تحميل البيانات
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          // الانتقال إلى Dashboard (سينتقل تلقائياً لصفحة الإعداد إذا لم يكن الملف مكتمل)
+          if (mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProviderDashboardScreen(),
+              ),
+                  (route) => false,
+            );
+          }
+        } else {
+          // إظهار رسالة خطأ
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Login error: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('حدث خطأ: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

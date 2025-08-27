@@ -119,19 +119,31 @@ class ProviderProfile {
     };
   }
 
-  // إنشاء من JSON من API
+  // إنشاء من JSON من API - تم إصلاحه
   factory ProviderProfile.fromJson(Map<String, dynamic> json) {
+    // استخراج رابط صورة الملف الشخصي
+    String? profileImageUrl;
+    if (json['profile_image'] != null) {
+      final profileImageData = json['profile_image'];
+      if (profileImageData is Map<String, dynamic>) {
+        profileImageUrl = profileImageData['url'] as String? ??
+            profileImageData['placeholder'] as String?;
+      } else if (profileImageData is String) {
+        profileImageUrl = profileImageData;
+      }
+    }
+
     return ProviderProfile(
       userId: json['user_id']?.toString() ?? json['id']?.toString() ?? '',
       name: json['name'] as String?,
       address: json['address'] as String?,
-      phoneNumber: json['phone_number'] as String?,
+      phoneNumber: json['phone'] as String?, // تغيير من phone_number إلى phone
       whatsappNumber: json['whatsapp_number'] as String?,
       serviceType: json['service_type'] as String? ?? '',
       city: json['city'] as String? ?? '',
       description: json['description'] as String?,
-      profileImage: json['profile_image'] as String?,
-      portfolioImages: _parseStringList(json['portfolio_images']),
+      profileImage: profileImageUrl,
+      portfolioImages: _parsePortfolioImages(json['portfolio_images']),
       rating: _parseDouble(json['rating']) ?? 0.0,
       reviewsCount: json['reviews_count'] as int? ?? 0,
       workHours: json['work_hours'] as String?,
@@ -145,6 +157,22 @@ class ProviderProfile {
       createdAt: _parseDateTime(json['created_at']),
       updatedAt: _parseDateTime(json['updated_at']),
     );
+  }
+
+  // Helper method لاستخراج صور المعرض
+  static List<String> _parsePortfolioImages(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((item) {
+        if (item is Map<String, dynamic>) {
+          return item['url'] as String? ??
+              item['path'] as String? ??
+              '';
+        }
+        return item.toString();
+      }).where((url) => url.isNotEmpty).toList();
+    }
+    return [];
   }
 
   // Helper methods لتحويل البيانات
@@ -201,7 +229,7 @@ class ProviderProfile {
     return null;
   }
 
-  // الحصول على تسمية الخدمة
+  // باقي الدوال تبقى كما هي...
   String getServiceLabel() {
     switch (serviceType.toLowerCase()) {
       case 'photographer':
@@ -237,7 +265,6 @@ class ProviderProfile {
     }
   }
 
-  // الحصول على أيقونة الخدمة
   IconData getServiceIcon() {
     switch (serviceType.toLowerCase()) {
       case 'photographer':
@@ -269,7 +296,6 @@ class ProviderProfile {
     }
   }
 
-  // الحصول على لون الخدمة
   Color getServiceColor() {
     switch (serviceType.toLowerCase()) {
       case 'photographer':
@@ -280,28 +306,27 @@ class ProviderProfile {
       case 'studio_photographer':
       case 'product-photographer':
       case 'product_photographer':
-        return const Color(0xFF3B82F6); // أزرق
+        return const Color(0xFF3B82F6);
       case 'video-editor':
       case 'video_editor':
       case 'videographer':
-        return const Color(0xFFEF4444); // أحمر
+        return const Color(0xFFEF4444);
       case 'photo-editor':
       case 'photo_editor':
       case 'graphic-designer':
       case 'graphic_designer':
-        return const Color(0xFF10B981); // أخضر
+        return const Color(0xFF10B981);
       case 'printer':
       case 'printing':
-        return const Color(0xFF8B5CF6); // بنفسجي
+        return const Color(0xFF8B5CF6);
       case 'drone-photographer':
       case 'drone_photographer':
-        return const Color(0xFFF59E0B); // برتقالي
+        return const Color(0xFFF59E0B);
       default:
-        return const Color(0xFF6B7280); // رمادي
+        return const Color(0xFF6B7280);
     }
   }
 
-  // الحصول على نص الخبرة
   String getExperienceText() {
     final now = DateTime.now();
     final experienceYears = now.difference(joinDate).inDays ~/ 365;
@@ -319,7 +344,6 @@ class ProviderProfile {
     }
   }
 
-  // التحقق من اكتمال الملف الشخصي
   bool get isProfileComplete {
     return name != null &&
         name!.isNotEmpty &&
@@ -329,7 +353,6 @@ class ProviderProfile {
         serviceType.isNotEmpty;
   }
 
-  // الحصول على تقييم نصي
   String getRatingText() {
     if (rating >= 4.5) {
       return 'ممتاز';
@@ -344,7 +367,6 @@ class ProviderProfile {
     }
   }
 
-  // الحصول على عدد سنوات الخبرة كرقم
   int getExperienceYears() {
     final now = DateTime.now();
     return now.difference(joinDate).inDays ~/ 365;

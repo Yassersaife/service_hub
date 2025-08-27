@@ -1,3 +1,4 @@
+// lib/models/service_models.dart - Updated to match real API
 import 'package:flutter/material.dart';
 
 class Service {
@@ -6,6 +7,7 @@ class Service {
   final String nameEn;
   final String slug;
   final String description;
+  final String? icon;
   final bool isActive;
   final int sortOrder;
   final DateTime createdAt;
@@ -17,6 +19,7 @@ class Service {
     required this.nameEn,
     required this.slug,
     required this.description,
+    this.icon,
     required this.isActive,
     required this.sortOrder,
     required this.createdAt,
@@ -30,6 +33,7 @@ class Service {
       nameEn: json['name_en'],
       slug: json['slug'],
       description: json['description'],
+      icon: json['icon'],
       isActive: json['is_active'],
       sortOrder: json['sort_order'],
       createdAt: DateTime.parse(json['created_at']),
@@ -44,6 +48,7 @@ class Service {
       'name_en': nameEn,
       'slug': slug,
       'description': description,
+      'icon': icon,
       'is_active': isActive,
       'sort_order': sortOrder,
       'created_at': createdAt.toIso8601String(),
@@ -52,6 +57,7 @@ class Service {
   }
 
   IconData getIcon() {
+    // استخدام الـ slug لتحديد الأيقونة
     switch (slug) {
       case 'event-photography':
         return Icons.celebration;
@@ -138,7 +144,7 @@ class ServiceCategory {
       description: json['description'],
       isActive: json['is_active'],
       sortOrder: json['sort_order'],
-      services: (json['services'] as List)
+      services: (json['services'] as List? ?? [])
           .map((service) => Service.fromJson(service))
           .toList(),
       servicesCount: json['services_count'],
@@ -167,28 +173,52 @@ class ServiceCategory {
   }
 
   IconData getCategoryIcon() {
-    switch (slug) {
-      case 'photography-production':
+    // استخدام الـ icon field من API أو fallback للـ slug
+    switch (icon) {
+      case 'camera_alt':
         return Icons.camera_alt;
-      case 'design-graphics':
-        return Icons.brush;
-      case 'printing-office':
+      case 'palette':
+        return Icons.palette;
+      case 'print':
         return Icons.print;
-      case 'digital-services':
+      case 'computer':
         return Icons.computer;
       default:
-        return Icons.category;
+      // Fallback حسب الـ slug
+        switch (slug) {
+          case 'photography-production':
+            return Icons.camera_alt;
+          case 'design-graphics':
+            return Icons.brush;
+          case 'printing-office':
+            return Icons.print;
+          case 'digital-services':
+            return Icons.computer;
+          default:
+            return Icons.category;
+        }
     }
   }
 
   Color getPrimaryColor() {
-    return Color(int.parse(color.replaceFirst('#', '0xFF')));
+    try {
+      return Color(int.parse(color.replaceFirst('#', '0xFF')));
+    } catch (e) {
+      return const Color(0xFF3B82F6); // اللون الافتراضي
+    }
   }
 
   List<Color> getGradientColors() {
-    return gradientColors
-        .map((colorHex) => Color(int.parse(colorHex.replaceFirst('#', '0xFF'))))
-        .toList();
+    try {
+      return gradientColors
+          .map((colorHex) => Color(int.parse(colorHex.replaceFirst('#', '0xFF'))))
+          .toList();
+    } catch (e) {
+      return [
+        const Color(0xFF3B82F6),
+        const Color(0xFF1E40AF),
+      ]; // الألوان الافتراضية
+    }
   }
 
   LinearGradient getLinearGradient() {

@@ -51,18 +51,26 @@ class ProviderService {
 
       if (response.success && response.data != null) {
         final List<dynamic> providersData = response.data;
-        return providersData
-            .map((data) => ProviderProfile.fromJson(data))
-            .where((profile) => profile.isComplete)
-            .toList();
+        final List<ProviderProfile> profiles = [];
+
+        for (final data in providersData) {
+          try {
+            final profile = ProviderProfile.fromJson(data);
+            profiles.add(profile);
+          } catch (e) {
+            // تجاهل البيانات التي لا يمكن تحويلها
+            continue;
+          }
+        }
+
+        return profiles.where((profile) => profile.isComplete).toList();
       }
+
       return [];
     } catch (e) {
-      print('Error getting all providers: $e');
       return [];
     }
   }
-
   /// البحث عن مقدمي الخدمات
   Future<List<ProviderProfile>> searchProviders({
     String? query,

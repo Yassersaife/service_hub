@@ -1,11 +1,15 @@
+// lib/features/service_provider/screens/provider_profile_setup_screen.dart - Updated with API
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:service_hub/core/utils/app_colors.dart';
 import 'package:service_hub/features/auth/services/auth_service.dart';
+import 'package:service_hub/widgets/custom_multiselect.dart';
 import 'package:service_hub/widgets/custom_dropdown.dart';
 import 'package:service_hub/widgets/custom_text_field.dart';
 import 'package:service_hub/features/service_provider/services/provider_service.dart';
 import 'package:service_hub/features/service_provider/models/provider_profile.dart';
+import 'package:service_hub/services/services_api_service.dart';
+import 'package:service_hub/models/service_models.dart';
 
 class ProviderProfileSetupScreen extends StatefulWidget {
   final ProviderProfile? existingProfile;
@@ -19,12 +23,12 @@ class ProviderProfileSetupScreen extends StatefulWidget {
 class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  // final _authService = AuthService();
   final _providerService = ProviderService();
 
   // Form controllers
   final _descriptionController = TextEditingController();
   final _workHoursController = TextEditingController();
+  final _addressController = TextEditingController(); // إضافة controller للعنوان
 
   // Form data
   String? _selectedService;
@@ -34,28 +38,68 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
   List<String> _specialties = [];
   Map<String, String> _socialMedia = {};
 
+  // API Data
+  List<Service> _availableServices = [];
+  List<String> _availableSpecialties = [];
+  bool _loadingServices = false;
+  bool _loadingSpecialties = false;
+
   bool _isLoading = false;
   int _currentStep = 0;
 
-  final List<Map<String, String>> _serviceTypes = [
-    {'value': 'photographer', 'label': 'مصور'},
-    {'value': 'video-editor', 'label': 'مونتاج فيديوهات'},
-    {'value': 'photo-editor', 'label': 'تعديل صور'},
-    {'value': 'printer', 'label': 'طباعة صور'},
-  ];
-
   final List<String> _cities = [
-    'نابلس', 'رام الله', 'القدس', 'الخليل', 'بيت لحم', 'جنين', 'طولكرم'
+    'نابلس', 'رام الله', 'القدس', 'الخليل', 'بيت لحم', 'جنين', 'طولكرم',
+    'قلقيلية', 'سلفيت', 'أريحا', 'طوباس', 'غزة', 'خان يونس', 'رفح', 'دير البلح'
   ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadServices();
 
-    // إذا كان هناك ملف شخصي موجود، قم بتحميل البيانات
     if (widget.existingProfile != null) {
       _loadExistingData();
+    }
+  }
+
+  Future<void> _loadServices() async {
+    setState(() {
+      _loadingServices = true;
+    });
+
+    try {
+      final services = await ServicesApiService.getAllServices();
+      setState(() {
+        _availableServices = services;
+        _loadingServices = false;
+      });
+    } catch (e) {
+      print('Error loading services: $e');
+      setState(() {
+        _loadingServices = false;
+      });
+    }
+  }
+
+  Future<void> _loadSpecialtiesByService(String serviceSlug) async {
+    setState(() {
+      _loadingSpecialties = true;
+      _availableSpecialties = [];
+      _specialties = []; // مسح التخصصات السابقة
+    });
+
+    try {
+      final specialties = await ServicesApiService.getSpecialtiesByService(serviceSlug);
+      setState(() {
+        _availableSpecialties = specialties;
+        _loadingSpecialties = false;
+      });
+    } catch (e) {
+      print('Error loading specialties: $e');
+      setState(() {
+        _loadingSpecialties = false;
+      });
     }
   }
 
@@ -65,10 +109,16 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
     _selectedCity = profile.city;
     _descriptionController.text = profile.description ?? '';
     _workHoursController.text = profile.workHours ?? '';
+    _addressController.text = profile.address ?? ''; // تحميل العنوان
     _profileImagePath = profile.profileImage;
     _portfolioImages = List.from(profile.portfolioImages);
     _specialties = List.from(profile.specialties);
     _socialMedia = Map.from(profile.socialMedia ?? {});
+
+    // تحميل التخصصات للخدمة المختارة
+    if (_selectedService != null) {
+      _loadSpecialtiesByService(_selectedService!);
+    }
   }
 
   @override
@@ -76,6 +126,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
     _tabController.dispose();
     _descriptionController.dispose();
     _workHoursController.dispose();
+    _addressController.dispose(); // إضافة dispose للعنوان
     super.dispose();
   }
 
@@ -206,18 +257,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
           const SizedBox(height: 24),
 
           // نوع الخدمة
-          CustomDropdown(
-            label: 'نوع الخدمة',
-            hint: 'اختر نوع خدمتك',
-            value: _selectedService,
-            items: _serviceTypes.map((e) => e['value']!).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedService = value;
-              });
-            },
-            required: true,
-          ),
+          _buildServiceDropdown(),
 
           const SizedBox(height: 20),
 
@@ -233,6 +273,16 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
               });
             },
             required: true,
+          ),
+
+          const SizedBox(height: 20),
+
+          // العنوان - حقل جديد
+          CustomTextField(
+            label: 'العنوان',
+            hint: 'أدخل عنوانك التفصيلي',
+            icon: Icons.location_on,
+            controller: _addressController,
           ),
 
           const SizedBox(height: 20),
@@ -258,10 +308,152 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
           const SizedBox(height: 24),
 
-          // التخصصات
+          // التخصصات - محدث ليكون dropdown
           _buildSpecialtiesSection(),
         ],
       ),
+    );
+  }
+
+  Widget _buildServiceDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              'نوع الخدمة',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151),
+              ),
+            ),
+            const Text(
+              ' *',
+              style: TextStyle(
+                color: AppColors.error,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFFE5E7EB),
+              width: 2,
+            ),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _selectedService,
+            hint: _loadingServices
+                ? const Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 8),
+                Text('جاري تحميل الخدمات...'),
+              ],
+            )
+                : const Text('اختر نوع خدمتك'),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+            items: _loadingServices ? [] : _availableServices.map((Service service) {
+              return DropdownMenuItem<String>(
+                value: service.slug,
+                child: Text(service.name),
+              );
+            }).toList(),
+            onChanged: _loadingServices ? null : (value) {
+              setState(() {
+                _selectedService = value;
+                _specialties.clear(); // مسح التخصصات السابقة
+              });
+
+              if (value != null) {
+                _loadSpecialtiesByService(value);
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSpecialtiesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_selectedService == null)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: const Text(
+              'اختر نوع الخدمة أولاً لعرض التخصصات المتاحة',
+              style: TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          )
+        else if (_loadingSpecialties)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else if (_availableSpecialties.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: const Text(
+                'لا توجد تخصصات متاحة لهذه الخدمة',
+                style: TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            CustomMultiSelect(
+              label: 'التخصصات',
+              hint: 'اختر تخصصاتك',
+              items: _availableSpecialties,
+              selectedItems: _specialties,
+              onSelectionChanged: (selectedItems) {
+                setState(() {
+                  _specialties = selectedItems;
+                });
+              },
+            ),
+      ],
     );
   }
 
@@ -455,98 +647,6 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
             color: Colors.grey.shade600,
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildSpecialtiesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'التخصصات',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF374151),
-              ),
-            ),
-            TextButton.icon(
-              onPressed: _addSpecialty,
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('إضافة'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 12),
-
-        if (_specialties.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: const Text(
-              'أضف تخصصاتك لجذب المزيد من العملاء',
-              style: TextStyle(
-                color: Color(0xFF64748B),
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          )
-        else
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _specialties.asMap().entries.map((entry) {
-              final index = entry.key;
-              final specialty = entry.value;
-
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.primary.withOpacity(0.3),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      specialty,
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: () => _removeSpecialty(index),
-                      child: Icon(
-                        Icons.close,
-                        size: 14,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
       ],
     );
   }
@@ -880,48 +980,6 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
     });
   }
 
-  void _addSpecialty() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final controller = TextEditingController();
-        return AlertDialog(
-          title: const Text('إضافة تخصص'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              hintText: 'اكتب التخصص',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  setState(() {
-                    _specialties.add(controller.text);
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('إضافة'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _removeSpecialty(int index) {
-    setState(() {
-      _specialties.removeAt(index);
-    });
-  }
-
   void _nextStep() {
     if (_currentStep == 0) {
       // التحقق من البيانات الأساسية
@@ -962,13 +1020,16 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
     final profile = ProviderProfile(
       userId: user['id'],
+      name: user['name'], // نحصل على الاسم من بيانات المستخدم
       serviceType: _selectedService!,
       city: _selectedCity!,
+      address: _addressController.text.isNotEmpty ? _addressController.text : null, // إضافة العنوان
       description: _descriptionController.text,
       profileImage: _profileImagePath,
       portfolioImages: _portfolioImages,
       workHours: _workHoursController.text.isNotEmpty ? _workHoursController.text : null,
       specialties: _specialties,
+      socialMedia: _socialMedia,
       isComplete: true,
       joinDate: widget.existingProfile?.joinDate ?? DateTime.now(),
       rating: widget.existingProfile?.rating ?? 0.0,
