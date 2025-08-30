@@ -191,7 +191,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                 children: [
                   Expanded(
                     child: _buildQuickStat(
-                      'الخبرة',
+                      'انضم للتطبيق',
                       widget.provider.getExperienceText(),
                       Icons.timeline,
                       AppColors.primary,
@@ -306,12 +306,12 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
           Text(
             value,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             title,
             style: const TextStyle(
@@ -407,11 +407,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                     'ساعات العمل',
                     widget.provider.workHours!,
                   ),
-                _buildInfoRow(
-                  Icons.timeline,
-                  'سنوات الخبرة',
-                  widget.provider.getExperienceText(),
-                ),
                 _buildInfoRow(
                   Icons.location_city,
                   'المدينة',

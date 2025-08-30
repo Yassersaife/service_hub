@@ -1,4 +1,4 @@
-// lib/features/service_provider/screens/provider_dashboard_screen.dart - Fixed
+// lib/features/service_provider/screens/provider_dashboard_screen.dart - With Delete Account
 import 'package:flutter/material.dart';
 import 'package:service_hub/core/utils/app_colors.dart';
 import 'package:service_hub/features/auth/screens/login_screen.dart';
@@ -20,6 +20,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   final _providerService = ProviderService();
   ProviderProfile? _profile;
   bool _isLoading = true;
+  bool _isDeletingAccount = false; // إضافة هذا المتغير
   String? _errorMessage;
 
   @override
@@ -91,6 +92,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -165,12 +167,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-  // تحقق إذا كان يجب عرض شاشة الترحيب
   bool _shouldShowWelcomeScreen() {
-    // إذا لم يكن هناك profile
     if (_profile == null) return true;
 
-    // إذا كان الـ profile غير مكتمل
     if (!_profile!.isProfileComplete) return true;
 
     return false;
@@ -189,7 +188,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          // إضافة AppBar منفصل
+          // تعديل AppBar لإضافة قائمة منسدلة
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -201,9 +200,37 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   color: Color(0xFF1E293B),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.logout, color: Color(0xFF64748B)),
-                onPressed: _handleLogout,
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Color(0xFF64748B)),
+                onSelected: (value) {
+                  if (value == 'logout') {
+                    _handleLogout();
+                  } else if (value == 'delete') {
+                    _handleDeleteAccount();
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout, color: Color(0xFF64748B)),
+                        SizedBox(width: 12),
+                        Text('تسجيل الخروج'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_forever, color: Colors.red),
+                        SizedBox(width: 12),
+                        Text('حذف الحساب', style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -472,9 +499,38 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             ),
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.white),
-              onPressed: _handleLogout,
+            // تعديل الـ actions لإضافة قائمة منسدلة
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              onSelected: (value) {
+                if (value == 'logout') {
+                  _handleLogout();
+                } else if (value == 'delete') {
+                  _handleDeleteAccount();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: Color(0xFF64748B)),
+                      SizedBox(width: 12),
+                      Text('تسجيل الخروج'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_forever, color: Colors.red),
+                      SizedBox(width: 12),
+                      Text('حذف الحساب', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -487,6 +543,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               _buildProfileCard(profile),
               const SizedBox(height: 20),
               _buildEditProfileButton(),
+              const SizedBox(height: 20),
             ]),
           ),
         ),
@@ -772,55 +829,110 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   }
 
   Widget _buildEditProfileButton() {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 56,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: AppColors.primaryGradient,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ElevatedButton.icon(
-          onPressed: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ProviderProfileSetupScreen(
-                  existingProfile: _profile,
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ElevatedButton.icon(
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProviderProfileSetupScreen(
+                    existingProfile: _profile,
+                  ),
                 ),
-              ),
-            );
+              );
 
-            if (result == true) {
-              await _loadProfile();
-            }
-          },
-          icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-          label: const Text(
-            'تعديل الملف الشخصي',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+              if (result == true) {
+                await _loadProfile();
+              }
+            },
+            icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+            label: const Text(
+              'تعديل الملف الشخصي',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              shadowColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+          const SizedBox(height: 10),
+          ElevatedButton.icon(
+            onPressed: _isDeletingAccount ? null : _handleDeleteAccount,
+            icon: _isDeletingAccount
+                ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+                : const Icon(Icons.delete_forever, color: Colors.white),
+            label: Text(
+              _isDeletingAccount ? 'جاري الحذف...' : 'حذف الحساب نهائياً',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
+  }
+
+
+  void _handleDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('حذف الحساب'),
+        content: const Text('هل أنت متأكد؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('حذف',
+            style: TextStyle(color: Colors.red),),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await _providerService.deleteAccount();
+
+      if (success) {
+        await AuthService.logout();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+        );
+      }
+    }
   }
 
   void _openWhatsApp() async {

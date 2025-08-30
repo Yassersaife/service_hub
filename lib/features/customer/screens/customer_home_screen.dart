@@ -264,7 +264,6 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           ),
         ),
 
-        // تحقق إذا القائمة فاضية
         _serviceCategories.isEmpty
             ? const Padding(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
@@ -280,7 +279,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           ),
         )
             : SizedBox(
-          height: 130,
+          height: 150,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -331,11 +330,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                               fontWeight: FontWeight.w700,
                             ),
                             textAlign: TextAlign.center,
-                            maxLines: 2,
+                            maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -427,12 +426,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
+
   void _navigateToCategory(ServiceCategory category) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CustomerServicesScreen(
-          categoryId: category.id.toString(),
+          initialServiceType: category.slug,
           categoryName: category.name,
         ),
       ),

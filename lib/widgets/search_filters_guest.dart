@@ -40,194 +40,302 @@ class SearchFiltersGuest extends StatefulWidget {
   State<SearchFiltersGuest> createState() => _SearchFiltersGuestState();
 }
 
-class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
+class _SearchFiltersGuestState extends State<SearchFiltersGuest>
+    with SingleTickerProviderStateMixin {
   bool showAdvancedFilters = false;
   late TextEditingController _searchController;
+  late AnimationController _animationController;
+  late Animation<double> _expandAnimation;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController(text: widget.searchTerm);
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _expandAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   @override
+  void didUpdateWidget(SearchFiltersGuest oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.searchTerm != widget.searchTerm) {
+      _searchController.text = widget.searchTerm;
+    }
+  }
+
+  void _toggleAdvancedFilters() {
+    setState(() {
+      showAdvancedFilters = !showAdvancedFilters;
+      if (showAdvancedFilters) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final cities = widget.allProviders.map((p) => p.city).toSet().toList()..sort();
-    final hasActiveFilters = widget.selectedCity != null || widget.selectedService != null;
+    final cities = _getUniqueCities();
+    final services = _getUniqueServices();
+    final hasActiveFilters = widget.selectedCity != null ||
+        widget.selectedService != null ||
+        widget.searchTerm.isNotEmpty;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          TextField(
-            controller: _searchController,
-            onChanged: widget.onSearchChanged,
-            decoration: InputDecoration(
-              hintText: 'ابحث عن نوع الخدمة أو المدينة...',
-              prefixIcon: const Icon(Icons.search, color: Color(0xFF64748B)),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
-          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // شريط البحث
+                _buildSearchBar(),
 
-          const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.search,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${widget.resultsCount} من ${widget.totalCount}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const Spacer(),
-
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    showAdvancedFilters = !showAdvancedFilters;
-                  });
-                },
-                icon: Icon(
-                  showAdvancedFilters ? Icons.expand_less : Icons.tune,
-                  size: 18,
-                ),
-                label: const Text('فلاتر'),
-                style: TextButton.styleFrom(
-                  foregroundColor: showAdvancedFilters
-                      ? AppColors.primary
-                      : const Color(0xFF64748B),
-                  backgroundColor: showAdvancedFilters
-                      ? AppColors.primary.withOpacity(0.1)
-                      : null,
-                ),
-              ),
-
-              if (hasActiveFilters) ...[
-                const SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEE2E2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextButton.icon(
-                    onPressed: widget.onClearFilters,
-                    icon: const Icon(Icons.clear, size: 16),
-                    label: const Text('مسح'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFFDC2626),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                ),
+                // شريط النتائج والفلاتر
+                _buildResultsBar(hasActiveFilters),
               ],
-            ],
+            ),
           ),
 
           // الفلاتر المتقدمة
-          if (showAdvancedFilters) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+          SizeTransition(
+            sizeFactor: _expandAnimation,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'فلاتر متقدمة',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildAdvancedFilters(cities, services),
+                  ],
+                ),
               ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildFilterDropdown(
-                          label: 'المدينة',
-                          value: widget.selectedCity,
-                          items: ['الكل', ...cities],
-                          onChanged: (value) {
-                            widget.onCityChanged(value == 'الكل' ? null : value);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildFilterDropdown(
-                          label: 'نوع الخدمة',
-                          value: widget.selectedService,
-                          items: ['الكل', ...widget.allCategories.map((c) => c.name)],
-                          onChanged: (value) {
-                            widget.onServiceChanged(value == 'الكل' ? null : value);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                  const SizedBox(height: 12),
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: widget.onSearchChanged,
+        textDirection: TextDirection.rtl,
+        decoration: InputDecoration(
+          hintText: 'ابحث عن نوع الخدمة أو المدينة أو اسم المقدم...',
+          hintStyle: const TextStyle(
+            color: Color(0xFF94A3B8),
+            fontSize: 14,
+          ),
+          prefixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+            icon: const Icon(Icons.clear, color: Color(0xFF64748B)),
+            onPressed: () {
+              _searchController.clear();
+              widget.onSearchChanged('');
+            },
+          )
+              : null,
+          suffixIcon: const Icon(Icons.search, color: Color(0xFF64748B)),
+          filled: false,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+        ),
+      ),
+    );
+  }
 
-                  _buildFilterDropdown(
-                    label: 'ترتيب حسب',
-                    value: widget.sortBy,
-                    items: const ['name', 'city', 'service'],
-                    itemLabels: const ['الاسم', 'المدينة', 'نوع الخدمة'],
-                    onChanged: (value) {
-                      if (value != null) widget.onSortChanged(value);
-                    },
-                  ),
+  Widget _buildResultsBar(bool hasActiveFilters) {
+    return Row(
+      children: [
+        // عدد النتائج
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.search,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${widget.resultsCount} من ${widget.totalCount}',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const Spacer(),
+
+        // زر مسح الفلاتر
+        if (hasActiveFilters) ...[
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEE2E2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextButton.icon(
+              onPressed: widget.onClearFilters,
+              icon: const Icon(Icons.clear_all, size: 16),
+              label: const Text('مسح الكل'),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFDC2626),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+
+        // زر الفلاتر المتقدمة
+        Container(
+          decoration: BoxDecoration(
+            color: showAdvancedFilters
+                ? AppColors.primary.withOpacity(0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextButton.icon(
+            onPressed: _toggleAdvancedFilters,
+            icon: AnimatedRotation(
+              turns: showAdvancedFilters ? 0.5 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                showAdvancedFilters ? Icons.expand_less : Icons.tune,
+                size: 18,
+              ),
+            ),
+            label: const Text('فلاتر'),
+            style: TextButton.styleFrom(
+              foregroundColor: showAdvancedFilters
+                  ? AppColors.primary
+                  : const Color(0xFF64748B),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdvancedFilters(List<String> cities, List<String> services) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildFilterDropdown(
+                label: 'المدينة',
+                value: widget.selectedCity,
+                items: ['الكل', ...cities.toSet().toList()], // إزالة duplicates
+                onChanged: (value) {
+                  widget.onCityChanged(value == 'الكل' ? null : value);
+                },
+                icon: Icons.location_on,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildFilterDropdown(
+                label: 'نوع الخدمة',
+                value: widget.selectedService,
+                items: [
+                  'الكل',
+                  ...widget.allCategories.map((c) => c.slug).toList()
                 ],
+                itemLabels: [
+                  'الكل',
+                  ...widget.allCategories.map((c) => c.name).toList()
+                ],
+                onChanged: (value) {
+                  widget.onServiceChanged(value == 'الكل' ? null : value);
+                },
+                icon: Icons.work,
               ),
             ),
           ],
-        ],
-      ),
+        ),
+
+        const SizedBox(height: 16),
+
+        _buildFilterDropdown(
+          label: 'ترتيب حسب',
+          value: widget.sortBy,
+          items: const ['name', 'city', 'service', 'rating'],
+          itemLabels: const ['الاسم', 'المدينة', 'نوع الخدمة', 'التقييم'],
+          onChanged: (value) {
+            if (value != null) widget.onSortChanged(value);
+          },
+          icon: Icons.sort,
+        ),
+      ],
     );
   }
 
@@ -237,19 +345,28 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
     required List<String> items,
     List<String>? itemLabels,
     required Function(String?) onChanged,
+    IconData? icon,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF374151),
-          ),
+        Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: const Color(0xFF64748B)),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -261,20 +378,22 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
             value: value,
             decoration: const InputDecoration(
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               isDense: true,
             ),
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF1E293B),
+            ),
             items: items.map((String item) {
-              final displayLabel = itemLabels != null && items.indexOf(item) < itemLabels.length
+              final displayLabel = itemLabels != null &&
+                  items.indexOf(item) < itemLabels.length
                   ? itemLabels[items.indexOf(item)]
                   : _getDisplayLabel(item);
 
               return DropdownMenuItem<String>(
                 value: item,
-                child: Text(
-                  displayLabel,
-                  style: const TextStyle(fontSize: 12),
-                ),
+                child: Text(displayLabel),
               );
             }).toList(),
             onChanged: onChanged,
@@ -284,33 +403,52 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest> {
     );
   }
 
-  String _getDisplayLabel(String item) {
-    switch (item) {
-      case 'photographer':
-        return 'مصور';
-      case 'video-editor':
-        return 'مونتاج فيديوهات';
-      case 'photo-editor':
-        return 'تعديل صور';
-      case 'printer':
-        return 'طباعة صور';
-      default:
-        return item;
-    }
+  List<String> _getUniqueCities() {
+    final cities = widget.allProviders
+        .where((p) => p.city.isNotEmpty)
+        .map((p) => p.city)
+        .toSet()
+        .toList();
+    cities.sort();
+    return cities;
   }
 
-  IconData _getServiceIcon(String serviceType) {
-    switch (serviceType) {
-      case 'photographer':
-        return Icons.camera_alt;
-      case 'video-editor':
-        return Icons.video_camera_back;
-      case 'photo-editor':
-        return Icons.edit;
-      case 'printer':
-        return Icons.print;
-      default:
-        return Icons.work;
+  List<String> _getUniqueServices() {
+    final services = <String>{};
+
+    // من الأصناف المحملة
+    for (var category in widget.allCategories) {
+      services.add(category.slug); // استخدم slug بدلاً من name
     }
+
+    // من مقدمي الخدمات
+    for (var provider in widget.allProviders) {
+      services.add(provider.serviceType);
+    }
+
+    // إزالة القيم الفارغة وترتيب
+    final servicesList = services.where((s) => s.isNotEmpty).toList();
+    servicesList.sort();
+    return servicesList;
+  }
+
+  String _getDisplayLabel(String item) {
+    // تحويل الأسماء الإنجليزية للعربية
+    final Map<String, String> translations = {
+      'photography-production': 'إنتاج تصوير',
+      'design-graphics': 'تصميم جرافيك',
+      'printing-office': 'مكتب طباعة',
+      'digital-services': 'خدمات رقمية',
+      'photographer': 'مصور',
+      'video-editor': 'مونتاج فيديوهات',
+      'photo-editor': 'تعديل صور',
+      'printer': 'طباعة صور',
+      'name': 'الاسم',
+      'city': 'المدينة',
+      'service': 'نوع الخدمة',
+      'rating': 'التقييم',
+    };
+
+    return translations[item] ?? item;
   }
 }

@@ -860,7 +860,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
   }
 
   Widget _buildSocialMediaSection() {
-    final platforms = ['Instagram', 'LinkedIn'];
+    final platforms = ['Instagram'];
 
     return Column(
       children: platforms.map((platform) {
@@ -868,7 +868,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
           padding: const EdgeInsets.only(bottom: 16),
           child: CustomTextField(
             label: platform,
-            hint: 'رابط حسابك على $platform',
+            hint: 'اسم حسابك على $platform',
             icon: _getSocialIcon(platform),
             controller: TextEditingController(
               text: _socialMedia[platform.toLowerCase()] ?? '',

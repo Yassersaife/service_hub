@@ -97,7 +97,6 @@ class ProviderService {
     }
   }
 
-  /// جلب ملف شخصي بالـ ID
   Future<ProviderProfile?> getProfile(String userId) async {
     try {
       print('جلب الملف الشخصي للمستخدم: $userId');
@@ -125,7 +124,6 @@ class ProviderService {
     }
   }
 
-  /// جلب جميع مقدمي الخدمات
   Future<List<ProviderProfile>> getAllProviders() async {
     try {
       final response = await ApiClient.get('/providers');
@@ -156,7 +154,6 @@ class ProviderService {
     }
   }
 
-  /// البحث عن مقدمي الخدمات
   Future<List<ProviderProfile>> searchProviders({
     String? query,
     String? serviceType,
@@ -232,10 +229,9 @@ class ProviderService {
     }
   }
 
-  /// الحصول على أفضل مقدمي الخدمات
   Future<List<ProviderProfile>> getTopRatedProviders({int limit = 10}) async {
     try {
-      final response = await ApiClient.get('/providers/top-rated?limit=$limit');
+      final response = await ApiClient.get('/providers/featured');
 
       if (response.success && response.data != null) {
         final List<dynamic> providersData = response.data;
@@ -253,7 +249,6 @@ class ProviderService {
           }
         }
 
-        // ترتيب حسب التقييم
         profiles.sort((a, b) => b.rating.compareTo(a.rating));
         return profiles.take(limit).toList();
       }
@@ -265,7 +260,6 @@ class ProviderService {
     }
   }
 
-  /// الحصول على مقدمي الخدمات الموثقين
   Future<List<ProviderProfile>> getVerifiedProviders() async {
     try {
       final response = await ApiClient.get('/providers/verified');
@@ -296,7 +290,6 @@ class ProviderService {
     }
   }
 
-  /// التحقق من وجود ملف شخصي
   Future<bool> hasProfile() async {
     try {
       final profile = await getMyProfile();
@@ -307,7 +300,6 @@ class ProviderService {
     }
   }
 
-  /// التحقق من اكتمال الملف الشخصي
   Future<bool> isProfileComplete() async {
     try {
       final profile = await getMyProfile();
@@ -317,4 +309,15 @@ class ProviderService {
       return false;
     }
   }
-}
+
+
+  Future<bool> deleteAccount() async {
+    try {
+      final response = await ApiClient.delete('auth/account/delete');
+      return response.success;
+    } catch (e) {
+      print('خطأ في حذف الحساب: $e');
+      return false;
+    }
+  }
+  }
