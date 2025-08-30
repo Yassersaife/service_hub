@@ -20,6 +20,13 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+
+    // طباعة معلومات للتشخيص
+    print('Provider Name: ${widget.provider.name}');
+    print('Profile Image: ${widget.provider.profileImage}');
+    print('Portfolio Images: ${widget.provider.portfolioImages}');
+    print('Social Media: ${widget.provider.socialMedia}');
+    print('Specialties: ${widget.provider.specialties}');
   }
 
   @override
@@ -96,17 +103,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                                 ),
                               ],
                             ),
-                            child: widget.provider.profileImage != null
-                                ? ClipRRect(
-                              borderRadius: BorderRadius.circular(30),
-                              child: Image.network(
-                                widget.provider.profileImage!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    _buildDefaultAvatar(120),
-                              ),
-                            )
-                                : _buildDefaultAvatar(120),
+                            child: _buildProfileImage(),
                           ),
 
                           const SizedBox(height: 16),
@@ -155,11 +152,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
 
                           const SizedBox(height: 12),
 
-                          // التقييم والإحصائيات
+                          // المدينة
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.location_on,
                                 color: Colors.white70,
                                 size: 16,
@@ -259,6 +256,38 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     );
   }
 
+  Widget _buildProfileImage() {
+    if (widget.provider.profileImage != null && widget.provider.profileImage!.isNotEmpty) {
+      print('Loading profile image: ${widget.provider.profileImage}');
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: Image.network(
+          widget.provider.profileImage!,
+          fit: BoxFit.cover,
+          width: 120,
+          height: 120,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            print('Error loading profile image: $error');
+            return _buildDefaultAvatar(120);
+          },
+        ),
+      );
+    } else {
+      return _buildDefaultAvatar(120);
+    }
+  }
+
   Widget _buildDefaultAvatar(double size) {
     return Container(
       width: size,
@@ -266,8 +295,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withOpacity(0.9),
-            AppColors.primary,
+            widget.provider.getServiceColor(),
+            widget.provider.getServiceColor().withOpacity(0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -319,6 +348,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
               color: Color(0xFF64748B),
               fontWeight: FontWeight.w500,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -332,7 +362,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // الوصف
-          if (widget.provider.description != null) ...[
+          if (widget.provider.description != null && widget.provider.description!.isNotEmpty) ...[
             _buildSectionCard(
               'نبذة عن الخدمة',
               Icons.description_outlined,
@@ -395,13 +425,13 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             Icons.info_outline,
             child: Column(
               children: [
-                if (widget.provider.address != null)
+                if (widget.provider.address != null && widget.provider.address!.isNotEmpty)
                   _buildInfoRow(
                     Icons.place_outlined,
                     'العنوان',
                     widget.provider.address!,
                   ),
-                if (widget.provider.workHours != null)
+                if (widget.provider.workHours != null && widget.provider.workHours!.isNotEmpty)
                   _buildInfoRow(
                     Icons.access_time_outlined,
                     'ساعات العمل',
@@ -412,7 +442,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   'المدينة',
                   widget.provider.city,
                 ),
-                if (widget.provider.phoneNumber != null)
+                if (widget.provider.phoneNumber != null && widget.provider.phoneNumber!.isNotEmpty)
                   _buildInfoRow(
                     Icons.phone_outlined,
                     'رقم الهاتف',
@@ -427,6 +457,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   Widget _buildPortfolioTab() {
+    print('Building portfolio tab with ${widget.provider.portfolioImages.length} images');
+
     if (widget.provider.portfolioImages.isEmpty) {
       return Center(
         child: Column(
@@ -477,8 +509,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
         ),
         itemCount: widget.provider.portfolioImages.length,
         itemBuilder: (context, index) {
+          final imageUrl = widget.provider.portfolioImages[index];
+          print('Building portfolio image $index: $imageUrl');
+
           return GestureDetector(
-            onTap: () => _showImageDialog(widget.provider.portfolioImages[index]),
+            onTap: () => _showImageDialog(imageUrl, index),
             child: Hero(
               tag: 'portfolio_$index',
               child: Container(
@@ -495,18 +530,50 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Image.network(
-                    widget.provider.portfolioImages[index],
+                    imageUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
                       return Container(
                         decoration: BoxDecoration(
                           color: Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.grey.shade400,
-                          size: 40,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                : null,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Error loading portfolio image $index: $error');
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.broken_image_outlined,
+                              color: Colors.grey.shade400,
+                              size: 40,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'فشل تحميل الصورة',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 12,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       );
                     },
@@ -530,71 +597,140 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             Icons.contact_phone,
             child: Column(
               children: [
-                _buildContactButton(
-                  'اتصال مباشر',
-                  Icons.phone,
-                  AppColors.primary,
-                      () => _makePhoneCall(),
-                ),
-                const SizedBox(height: 8),
-                _buildContactButton(
-                  'واتساب',
-                  Icons.chat,
-                  AppColors.secondary,
-                      () => _sendWhatsApp(),
-                ),
+                if (widget.provider.phoneNumber != null && widget.provider.phoneNumber!.isNotEmpty) ...[
+                  _buildContactButton(
+                    'اتصال مباشر',
+                    Icons.phone,
+                    AppColors.primary,
+                        () => _makePhoneCall(),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (widget.provider.whatsappNumber != null && widget.provider.whatsappNumber!.isNotEmpty) ...[
+                  _buildContactButton(
+                    'واتساب',
+                    Icons.chat,
+                    AppColors.secondary,
+                        () => _sendWhatsApp(),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                // إذا لم توجد أرقام، استخدم رقم افتراضي
+                if ((widget.provider.phoneNumber == null || widget.provider.phoneNumber!.isEmpty) &&
+                    (widget.provider.whatsappNumber == null || widget.provider.whatsappNumber!.isEmpty)) ...[
+                  _buildContactButton(
+                    'تواصل معنا',
+                    Icons.phone,
+                    AppColors.primary,
+                        () => _makePhoneCall(),
+                  ),
+                ],
               ],
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
 
-          // Social Media Section
-          _buildSectionCard(
-            'وسائل التواصل الاجتماعي',
-            Icons.share,
-            child: Column(
-              children: [
-                _buildContactButton(
-                  'Instagram',
-                  Icons.camera_alt,
-                  const Color(0xFFE4405F), // Instagram brand color
-                      () => _openInstagram(),
-                ),
-              ],
+          // Social Media Section - فقط إذا كان موجود
+          if (_hasSocialMedia()) ...[
+            _buildSectionCard(
+              'وسائل التواصل الاجتماعي',
+              Icons.share,
+              child: Column(
+                children: _buildSocialMediaButtons(),
+              ),
             ),
-          ),
-
-          const SizedBox(height: 8),
+          ],
         ],
       ),
     );
   }
 
-// Add these methods to handle social media links
+  bool _hasSocialMedia() {
+    return widget.provider.socialMedia.isNotEmpty &&
+        widget.provider.socialMedia.values.any((value) => value.isNotEmpty);
+  }
+
+  List<Widget> _buildSocialMediaButtons() {
+    List<Widget> buttons = [];
+
+    // Instagram
+    if (widget.provider.socialMedia['instagram'] != null &&
+        widget.provider.socialMedia['instagram']!.isNotEmpty) {
+      buttons.add(_buildContactButton(
+        'Instagram',
+        Icons.camera_alt,
+        const Color(0xFFE4405F),
+            () => _openInstagram(),
+      ));
+      buttons.add(const SizedBox(height: 12));
+    }
+
+    // Facebook
+    if (widget.provider.socialMedia['facebook'] != null &&
+        widget.provider.socialMedia['facebook']!.isNotEmpty) {
+      buttons.add(_buildContactButton(
+        'Facebook',
+        Icons.facebook,
+        const Color(0xFF1877F2),
+            () => _openFacebook(),
+      ));
+      buttons.add(const SizedBox(height: 12));
+    }
+
+    // إزالة آخر SizedBox
+    if (buttons.isNotEmpty && buttons.last is SizedBox) {
+      buttons.removeLast();
+    }
+
+    return buttons;
+  }
+
   void _openInstagram() async {
-    const instagramUrl = 'https://instagram.com/your_username'; // استبدل your_username باسم المستخدم الخاص بك
-    const instagramAppUrl = 'instagram://user?username=your_username'; // للفتح في التطبيق مباشرة
+    final username = widget.provider.socialMedia['instagram'] ?? '';
+    if (username.isEmpty) return;
+
+    final instagramUrl = 'https://instagram.com/$username';
+    final instagramAppUrl = 'instagram://user?username=$username';
 
     try {
       if (await canLaunchUrl(Uri.parse(instagramAppUrl))) {
         await launchUrl(Uri.parse(instagramAppUrl));
-      } else {
+      } else if (await canLaunchUrl(Uri.parse(instagramUrl))) {
         await launchUrl(
           Uri.parse(instagramUrl),
           mode: LaunchMode.externalApplication,
         );
+      } else {
+        _showErrorSnackbar('تعذر فتح Instagram');
       }
     } catch (e) {
-      // Handle error - show snackbar or toast
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تعذر فتح Instagram'),
-            backgroundColor: Colors.red,
-          ),
+      print('Error opening Instagram: $e');
+      _showErrorSnackbar('تعذر فتح Instagram');
+    }
+  }
+
+  void _openFacebook() async {
+    final username = widget.provider.socialMedia['facebook'] ?? '';
+    if (username.isEmpty) return;
+
+    final facebookUrl = 'https://facebook.com/$username';
+    final facebookAppUrl = 'fb://profile/$username';
+
+    try {
+      if (await canLaunchUrl(Uri.parse(facebookAppUrl))) {
+        await launchUrl(Uri.parse(facebookAppUrl));
+      } else if (await canLaunchUrl(Uri.parse(facebookUrl))) {
+        await launchUrl(
+          Uri.parse(facebookUrl),
+          mode: LaunchMode.externalApplication,
         );
+      } else {
+        _showErrorSnackbar('تعذر فتح Facebook');
       }
+    } catch (e) {
+      print('Error opening Facebook: $e');
+      _showErrorSnackbar('تعذر فتح Facebook');
     }
   }
 
@@ -703,7 +839,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   void _makePhoneCall() async {
-    final phoneNumber = widget.provider.phoneNumber ?? '0599123456';
+    // استخدم رقم المزود إذا كان متوفراً، وإلا استخدم رقم افتراضي
+    final phoneNumber = widget.provider.phoneNumber?.isNotEmpty == true
+        ? widget.provider.phoneNumber!
+        : ''; // الرقم من شاشة About
+
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
 
     try {
@@ -713,15 +853,22 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
         _showErrorSnackbar('لا يمكن إجراء المكالمة');
       }
     } catch (e) {
+      print('Error making phone call: $e');
       _showErrorSnackbar('حدث خطأ أثناء المحاولة');
     }
   }
 
   void _sendWhatsApp() async {
-    final phoneNumber = widget.provider.whatsappNumber;
+    // استخدم رقم الواتساب إذا كان متوفراً، وإلا استخدم رقم الهاتف، وإلا الرقم الافتراضي
+    final phoneNumber = widget.provider.whatsappNumber?.isNotEmpty == true
+        ? widget.provider.whatsappNumber!
+        : (widget.provider.phoneNumber?.isNotEmpty == true
+        ? widget.provider.phoneNumber!
+        : '0568972337');
+
     final message = 'مرحباً ${widget.provider.name ?? ''}, أريد الاستفسار عن خدمة ${widget.provider.getServiceLabel()}';
     final Uri whatsappUri = Uri.parse(
-        'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
+        'https://wa.me/${phoneNumber.replaceAll('+', '')}?text=${Uri.encodeComponent(message)}');
 
     try {
       if (await canLaunchUrl(whatsappUri)) {
@@ -730,11 +877,12 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
         _showErrorSnackbar('لا يمكن فتح واتساب');
       }
     } catch (e) {
+      print('Error opening WhatsApp: $e');
       _showErrorSnackbar('حدث خطأ أثناء المحاولة');
     }
   }
 
-  void _showImageDialog(String imageUrl) {
+  void _showImageDialog(String imageUrl, int index) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -743,12 +891,31 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
           children: [
             Center(
               child: Hero(
-                tag: 'portfolio_${widget.provider.portfolioImages.indexOf(imageUrl)}',
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.contain,
+                tag: 'portfolio_$index',
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.9,
+                    maxHeight: MediaQuery.of(context).size.height * 0.8,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 200,
+                          height: 200,
+                          color: Colors.grey.shade800,
+                          child: const Center(
+                            child: Text(
+                              'فشل تحميل الصورة',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -756,12 +923,18 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             Positioned(
               top: 40,
               right: 20,
-              child: IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 30,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
               ),
             ),

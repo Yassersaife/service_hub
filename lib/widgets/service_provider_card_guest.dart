@@ -228,24 +228,7 @@ class ServiceProviderCardGuest extends StatelessWidget {
               // الجزء السفلي - الخدمات
               if (profile.specialties.isNotEmpty) ...[
                 Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'الخدمات المتوفرة:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
+                  child:Wrap(
                         spacing: 6,
                         runSpacing: 6,
                         children: profile.specialties.map((service) {
@@ -264,7 +247,7 @@ class ServiceProviderCardGuest extends StatelessWidget {
                             child: Text(
                               service,
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 color: profile.getServiceColor(),
                               ),
@@ -272,8 +255,6 @@ class ServiceProviderCardGuest extends StatelessWidget {
                           );
                         }).toList(),
                       ),
-                    ],
-                  ),
                 ),
               ] else ...[
                 Container(

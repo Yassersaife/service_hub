@@ -27,6 +27,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
   final _descriptionController = TextEditingController();
   final _workHoursController = TextEditingController();
   final _addressController = TextEditingController();
+  final _whatsappNumber = TextEditingController();
 
   // Form data
   String? _selectedService;
@@ -167,6 +168,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
     _selectedService = profile.serviceType;
     _selectedCity = profile.city;
     _descriptionController.text = profile.description ?? '';
+    _whatsappNumber.text = profile.whatsappNumber ?? '';
     _workHoursController.text = profile.workHours ?? '';
     _addressController.text = profile.address ?? '';
     _profileImagePath = profile.profileImage;
@@ -550,6 +552,20 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
           const SizedBox(height: 24),
 
           _buildSocialMediaSection(),
+          const SizedBox(height: 24),
+
+          CustomTextField(
+            label: 'رقم واتس اب',
+            hint: 'أدخل رقم الواتس اب الخاص بك',
+            icon: Icons.phone,
+            controller: _whatsappNumber,
+            keyboardType: TextInputType.phone,
+            onChanged: (value) {
+              setState(() {
+                _whatsappNumber.text = value;
+              });
+            },
+          ),
         ],
       ),
     );

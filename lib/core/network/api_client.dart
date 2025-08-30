@@ -29,9 +29,22 @@ class ApiClient {
     return headers;
   }
 
+  static Map<String, String> get _multipartHeaders {
+    final headers = {
+      'Accept': 'application/json',
+    };
+
+    if (_token != null) {
+      headers['Authorization'] = 'Bearer $_token';
+    }
+
+    return headers;
+  }
+
   // GET request
   static Future<ApiResponse> get(String endpoint) async {
     try {
+      print('GET: $baseUrl$endpoint');
       final response = await http.get(
         Uri.parse('$baseUrl$endpoint'),
         headers: _headers,
@@ -56,6 +69,9 @@ class ApiClient {
   // POST request
   static Future<ApiResponse> post(String endpoint, Map<String, dynamic> data) async {
     try {
+      print('POST: $baseUrl$endpoint');
+      print('Data: $data');
+
       final response = await http.post(
         Uri.parse('$baseUrl$endpoint'),
         headers: _headers,
@@ -78,9 +94,83 @@ class ApiClient {
     }
   }
 
+  // POST request مع ملفات (Multipart)
+  static Future<ApiResponse> postMultipart({
+    required String endpoint,
+    required Map<String, String> fields,
+    Map<String, File>? files,
+    Map<String, List<File>>? fileArrays,
+  }) async {
+    try {
+      print('POST Multipart: $baseUrl$endpoint');
+      print('Fields: $fields');
+      print('Files: ${files?.keys}');
+      print('File Arrays: ${fileArrays?.keys}');
+
+      final uri = Uri.parse('$baseUrl$endpoint');
+      final request = http.MultipartRequest('POST', uri);
+
+      // إضافة headers
+      request.headers.addAll(_multipartHeaders);
+
+      // إضافة الحقول النصية
+      request.fields.addAll(fields);
+
+      // إضافة الملفات المفردة
+      if (files != null) {
+        for (final entry in files.entries) {
+          if (entry.value.existsSync()) {
+            final multipartFile = await http.MultipartFile.fromPath(
+              entry.key,
+              entry.value.path,
+            );
+            request.files.add(multipartFile);
+          }
+        }
+      }
+
+      // إضافة مصفوفات الملفات
+      if (fileArrays != null) {
+        for (final entry in fileArrays.entries) {
+          for (final file in entry.value) {
+            if (file.existsSync()) {
+              final multipartFile = await http.MultipartFile.fromPath(
+                entry.key,
+                file.path,
+              );
+              request.files.add(multipartFile);
+            }
+          }
+        }
+      }
+
+      print('Total files: ${request.files.length}');
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      return _handleResponse(response);
+    } on SocketException {
+      return ApiResponse(
+        success: false,
+        message: 'لا يوجد اتصال بالإنترنت',
+        data: null,
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'حدث خطأ: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
   // PUT request
   static Future<ApiResponse> put(String endpoint, Map<String, dynamic> data) async {
     try {
+      print('PUT: $baseUrl$endpoint');
+      print('Data: $data');
+
       final response = await http.put(
         Uri.parse('$baseUrl$endpoint'),
         headers: _headers,
@@ -103,9 +193,80 @@ class ApiClient {
     }
   }
 
+  // PUT request مع ملفات (Multipart)
+  static Future<ApiResponse> putMultipart({
+    required String endpoint,
+    required Map<String, String> fields,
+    Map<String, File>? files,
+    Map<String, List<File>>? fileArrays,
+  }) async {
+    try {
+      print('PUT Multipart: $baseUrl$endpoint');
+
+      final uri = Uri.parse('$baseUrl$endpoint');
+      final request = http.MultipartRequest('POST', uri); // Laravel يستخدم POST مع _method=PUT
+
+      // إضافة headers
+      request.headers.addAll(_multipartHeaders);
+
+      // إضافة method override لـ PUT
+      fields['_method'] = 'PUT';
+
+      // إضافة الحقول النصية
+      request.fields.addAll(fields);
+
+      // إضافة الملفات المفردة
+      if (files != null) {
+        for (final entry in files.entries) {
+          if (entry.value.existsSync()) {
+            final multipartFile = await http.MultipartFile.fromPath(
+              entry.key,
+              entry.value.path,
+            );
+            request.files.add(multipartFile);
+          }
+        }
+      }
+
+      // إضافة مصفوفات الملفات
+      if (fileArrays != null) {
+        for (final entry in fileArrays.entries) {
+          for (final file in entry.value) {
+            if (file.existsSync()) {
+              final multipartFile = await http.MultipartFile.fromPath(
+                entry.key,
+                file.path,
+              );
+              request.files.add(multipartFile);
+            }
+          }
+        }
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      return _handleResponse(response);
+    } on SocketException {
+      return ApiResponse(
+        success: false,
+        message: 'لا يوجد اتصال بالإنترنت',
+        data: null,
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'حدث خطأ: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
   // DELETE request
   static Future<ApiResponse> delete(String endpoint) async {
     try {
+      print('DELETE: $baseUrl$endpoint');
+
       final response = await http.delete(
         Uri.parse('$baseUrl$endpoint'),
         headers: _headers,
@@ -129,6 +290,9 @@ class ApiClient {
 
   static ApiResponse _handleResponse(http.Response response) {
     try {
+      print('Response Status: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
       final jsonData = json.decode(response.body);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -145,6 +309,7 @@ class ApiClient {
         );
       }
     } catch (e) {
+      print('Error parsing response: $e');
       return ApiResponse(
         success: false,
         message: 'خطأ في معالجة البيانات',
