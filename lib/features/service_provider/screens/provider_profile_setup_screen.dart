@@ -556,7 +556,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
           CustomTextField(
             label: 'رقم واتس اب',
-            hint: 'أدخل رقم الواتس اب الخاص بك',
+            hint: '97**********',
             icon: Icons.phone,
             controller: _whatsappNumber,
             keyboardType: TextInputType.phone,
@@ -1100,6 +1100,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
         rating: widget.existingProfile?.rating ?? 0.0,
         reviewsCount: widget.existingProfile?.reviewsCount ?? 0,
         isVerified: widget.existingProfile?.isVerified ?? false,
+        whatsappNumber: _whatsappNumber.text.isNotEmpty ? _whatsappNumber.text : null,
       );
 
 

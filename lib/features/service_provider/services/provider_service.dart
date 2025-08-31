@@ -37,16 +37,15 @@ class ProviderService {
         'address': profile.address ?? '',
         'description': profile.description ?? '',
         'work_hours': profile.workHours ?? '',
-        'whatsappNumber': profile.whatsappNumber ?? '',
+        'whatsapp_number': profile.whatsappNumber?.toString()?? '',
       };
 
       fields['social_media'] = jsonEncode(profile.socialMedia.isNotEmpty ? profile.socialMedia : {});
 
-      // إضافة specialties كـ JSON (مع تأكد إن Backend يقبل JSON)
+
       if (profile.specialties.isNotEmpty) {
         fields['selected_services'] = jsonEncode(profile.specialties);
 
-        // إضافة أسعار افتراضية كـ JSON object
         Map<String, String> servicesPrices = {};
         for (String service in profile.specialties) {
           servicesPrices[service] = "0";
@@ -112,7 +111,7 @@ class ProviderService {
         'address': profile.address ?? '',
         'description': profile.description ?? '',
         'work_hours': profile.workHours ?? '',
-        'whatsappNumber': profile.whatsappNumber ?? '',
+        'whatsapp_number': profile.whatsappNumber?.toString() ?? '',
       };
 
       if (profile.socialMedia.isNotEmpty) {
