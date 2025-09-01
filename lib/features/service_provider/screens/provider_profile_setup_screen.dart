@@ -126,7 +126,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
     });
 
     try {
-      final response = await ApiClient.get('/categories/$serviceSlug');
+      final response = await ApiClient.get('/categories/$serviceSlug/services');
 
       if (response.success && response.data != null) {
         final data = response.data;

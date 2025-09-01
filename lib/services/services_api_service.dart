@@ -4,7 +4,6 @@ import '../core/network/api_urls.dart';
 import '../models/service_models.dart';
 
 class ServicesApiService {
-  /// جلب جميع فئات الخدمات
   static Future<List<ServiceCategory>> getAllServiceCategories() async {
     try {
       final response = await ApiClient.get('/categories');
@@ -21,7 +20,6 @@ class ServicesApiService {
     }
   }
 
-  /// جلب جميع الخدمات (مسطحة)
   static Future<List<Service>> getAllServices() async {
     try {
       final response = await ApiClient.get('/categories');
@@ -168,22 +166,6 @@ class ServicesApiService {
     }
   }
 
-  /// جلب جميع مقدمي الخدمات
-  static Future<List<Map<String, dynamic>>> getAllProviders() async {
-    try {
-      final response = await ApiClient.get(ApiUrls.providers);
-
-      if (response.success && response.data != null) {
-        return List<Map<String, dynamic>>.from(response.data);
-      } else {
-        return [];
-      }
-    } catch (e) {
-      print('Error getting all providers: $e');
-      return [];
-    }
-  }
-
   /// جلب مقدم خدمة محدد
   static Future<Map<String, dynamic>?> getProviderById(String providerId) async {
     try {
@@ -200,31 +182,4 @@ class ServicesApiService {
     }
   }
 
-  /// البحث في مقدمي الخدمات
-  static Future<List<Map<String, dynamic>>> searchProviders({
-    required String query,
-    String? serviceType,
-    String? city,
-    String? categoryId,
-  }) async {
-    try {
-      final params = <String, dynamic>{'q': query};
-
-      if (serviceType != null) params['service_type'] = serviceType;
-      if (city != null) params['city'] = city;
-      if (categoryId != null) params['category_id'] = categoryId;
-
-      final searchUrl = ApiUrls.withParams(ApiUrls.searchProviders, params);
-      final response = await ApiClient.get(searchUrl);
-
-      if (response.success && response.data != null) {
-        return List<Map<String, dynamic>>.from(response.data);
-      } else {
-        return [];
-      }
-    } catch (e) {
-      print('Error searching providers: $e');
-      return [];
-    }
-  }
 }

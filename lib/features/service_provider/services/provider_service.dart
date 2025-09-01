@@ -346,6 +346,36 @@ class ProviderService {
       return [];
     }
   }
+  Future<List<ProviderProfile>> getAllProvidersadmin() async {
+    try {
+      final response = await ApiClient.get('/providers');
+
+      if (response.success && response.data != null) {
+        final List<dynamic> providersData = response.data;
+        final List<ProviderProfile> profiles = [];
+
+        for (final data in providersData) {
+          try {
+            final profile = ProviderProfile.fromJson(data);
+
+            if (profile.isProfileComplete) {
+              profiles.add(profile);
+            }
+          } catch (e) {
+            print('تجاهل ملف شخصي: $e');
+            continue;
+          }
+        }
+
+        return profiles;
+      }
+
+      return [];
+    } catch (e) {
+      print('خطأ في getAllProviders: $e');
+      return [];
+    }
+  }
 
   Future<List<ProviderProfile>> searchProviders({
     String? query,

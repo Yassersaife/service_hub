@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:service_hub/screens/admin_screen.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';
@@ -276,13 +277,23 @@ class _LoginScreenState extends State<LoginScreen> {
           await Future.delayed(const Duration(milliseconds: 500));
 
           if (mounted) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ProviderDashboardScreen(),
-              ),
-                  (route) => false,
-            );
+            if(AuthService.userType == 'admin') {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AdminScreen(),
+                ),
+                    (route) => false,
+              );
+            } else {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProviderDashboardScreen(),
+                  ),
+                      (route) => false,
+                );
+            }
           }
         } else {
           // إظهار رسالة خطأ

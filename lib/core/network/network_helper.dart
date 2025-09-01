@@ -43,11 +43,10 @@ class NetworkHelper {
     print('User data saved: ${userData['name'] ?? 'Unknown'}');
   }
 
-  /// جلب بيانات المستخدم
   static Future<Map<String, dynamic>?> getUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user_data');
-
+    print(userJson);
     if (userJson != null) {
       try {
         final userData = json.decode(userJson) as Map<String, dynamic>;

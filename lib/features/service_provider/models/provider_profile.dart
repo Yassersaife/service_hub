@@ -22,6 +22,7 @@ class ProviderProfile {
   final bool isComplete;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final bool isfeatured ;
 
   const ProviderProfile({
     required this.userId,
@@ -44,6 +45,7 @@ class ProviderProfile {
     this.isComplete = false,
     this.createdAt,
     this.updatedAt,
+    this.isfeatured = false,
   });
 
   ProviderProfile copyWith({
@@ -67,6 +69,7 @@ class ProviderProfile {
     bool? isComplete,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isfeatured,
   }) {
     return ProviderProfile(
       userId: userId ?? this.userId,
@@ -89,6 +92,7 @@ class ProviderProfile {
       isComplete: isComplete ?? this.isComplete,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isfeatured: isfeatured ?? this.isfeatured,
     );
   }
 
@@ -112,6 +116,7 @@ class ProviderProfile {
       'social_media': socialMedia.isNotEmpty ? socialMedia : {},
       'join_date': joinDate.toIso8601String(),
       'is_complete': isComplete,
+      'is_featured': isfeatured,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
@@ -272,6 +277,7 @@ class ProviderProfile {
         reviewsCount: int.tryParse(data['reviews_count']?.toString() ?? '0') ?? 0,
         workHours: data['work_hours']?.toString(),
         isVerified: data['is_verified'] == true || data['is_verified'] == 1 || data['is_verified'] == '1',
+        isfeatured: data['is_featured'] == true || data['is_featured'] == 1 || data['is_featured'] == '1',
         specialties: specialties,
         socialMedia: socialMediaMap,
         joinDate: DateTime.tryParse(data['join_date']?.toString() ?? '') ??
@@ -365,7 +371,7 @@ class ProviderProfile {
 
   @override
   String toString() {
-    return 'ProviderProfile(userId: $userId, name: $name, serviceType: $serviceType, city: $city, portfolioImages: ${portfolioImages.length}, socialMedia: $socialMedia)';
+    return 'ProviderProfile(userId: $userId, name: $name, serviceType: $serviceType,isfeatured: $isfeatured,isverified: $isVerified, city: $city, portfolioImages: ${portfolioImages.length}, socialMedia: $socialMedia)';
   }
 
   @override

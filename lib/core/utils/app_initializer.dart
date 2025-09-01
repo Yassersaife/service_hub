@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:service_hub/screens/admin_screen.dart';
 import '../network//network_helper.dart';
 import '../../screens/user_type_screen.dart';
 import '../../screens/welcome_screen.dart';
@@ -36,9 +37,10 @@ class _AppInitializerState extends State<AppInitializer> {
     } else if (token == null || userData == null) {
       nextScreen = const UserTypeScreen();
     } else {
-      final userType = userData['type'];
-      if (userType == 'customer') {
-        nextScreen = const CustomerBottomNavigationScreen();
+      final userType = userData['user_type'];
+      print(userType);
+      if (userType == 'admin') {
+        nextScreen = const AdminScreen();
       } else {
         nextScreen = const ProviderDashboardScreen();
       }
