@@ -1,39 +1,46 @@
 // lib/widgets/search_filters_guest.dart
 import 'package:flutter/material.dart';
 import 'package:service_hub/features/service_provider/models/provider_profile.dart';
-import 'package:service_hub/models/service_models.dart';
+import 'package:service_hub/models/service.dart';
+import 'package:service_hub/models/category.dart';
 import '../core/utils/app_colors.dart';
 
 class SearchFiltersGuest extends StatefulWidget {
   final String searchTerm;
   final String? selectedCity;
   final String? selectedService;
+  final String? selectedCategory;
   final String sortBy;
   final List<ProviderProfile> allProviders;
   final Function(String) onSearchChanged;
   final Function(String?) onCityChanged;
   final Function(String?) onServiceChanged;
+  final Function(String?) onCategoryChanged;
   final Function(String) onSortChanged;
   final VoidCallback onClearFilters;
   final int resultsCount;
   final int totalCount;
-  final List<ServiceCategory> allCategories;
+  final List<Category> allCategories;
+  final List<Service> allServices;
 
   const SearchFiltersGuest({
     super.key,
     required this.searchTerm,
     required this.selectedCity,
     required this.selectedService,
+    this.selectedCategory,
     required this.sortBy,
     required this.allProviders,
     required this.onSearchChanged,
     required this.onCityChanged,
     required this.onServiceChanged,
+    required this.onCategoryChanged,
     required this.onSortChanged,
     required this.onClearFilters,
     required this.resultsCount,
     required this.totalCount,
     required this.allCategories,
+    required this.allServices,
   });
 
   @override
@@ -90,9 +97,9 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest>
   @override
   Widget build(BuildContext context) {
     final cities = _getUniqueCities();
-    final services = _getUniqueServices();
     final hasActiveFilters = widget.selectedCity != null ||
         widget.selectedService != null ||
+        widget.selectedCategory != null ||
         widget.searchTerm.isNotEmpty;
 
     return Container(
@@ -150,7 +157,7 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildAdvancedFilters(cities, services),
+                    _buildAdvancedFilters(cities),
                   ],
                 ),
               ),
@@ -285,16 +292,17 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest>
     );
   }
 
-  Widget _buildAdvancedFilters(List<String> cities, List<String> services) {
+  Widget _buildAdvancedFilters(List<String> cities) {
     return Column(
       children: [
+        // الصف الأول: المدينة + الفئة
         Row(
           children: [
             Expanded(
               child: _buildFilterDropdown(
                 label: 'المدينة',
                 value: widget.selectedCity,
-                items: ['الكل', ...cities.toSet().toList()], // إزالة duplicates
+                items: ['الكل', ...cities.toSet().toList()],
                 onChanged: (value) {
                   widget.onCityChanged(value == 'الكل' ? null : value);
                 },
@@ -304,20 +312,20 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest>
             const SizedBox(width: 12),
             Expanded(
               child: _buildFilterDropdown(
-                label: 'نوع الخدمة',
-                value: widget.selectedService,
+                label: 'فئة الخدمة',
+                value: widget.selectedCategory,
                 items: [
                   'الكل',
-                  ...widget.allCategories.map((c) => c.slug).toList()
+                  ...widget.allCategories.map((c) => c.id.toString()).toList()
                 ],
                 itemLabels: [
                   'الكل',
                   ...widget.allCategories.map((c) => c.name).toList()
                 ],
                 onChanged: (value) {
-                  widget.onServiceChanged(value == 'الكل' ? null : value);
+                  widget.onCategoryChanged(value == 'الكل' ? null : value);
                 },
-                icon: Icons.work,
+                icon: Icons.category,
               ),
             ),
           ],
@@ -325,15 +333,41 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest>
 
         const SizedBox(height: 16),
 
-        _buildFilterDropdown(
-          label: 'ترتيب حسب',
-          value: widget.sortBy,
-          items: const ['name', 'city', 'service', 'rating'],
-          itemLabels: const ['الاسم', 'المدينة', 'نوع الخدمة', 'التقييم'],
-          onChanged: (value) {
-            if (value != null) widget.onSortChanged(value);
-          },
-          icon: Icons.sort,
+        // الصف الثاني: التخصص + الترتيب
+        Row(
+          children: [
+            Expanded(
+              child: _buildFilterDropdown(
+                label: 'التخصص',
+                value: widget.selectedService,
+                items: [
+                  'الكل',
+                  ...widget.allServices.map((s) => s.id.toString()).toList()
+                ],
+                itemLabels: [
+                  'الكل',
+                  ...widget.allServices.map((s) => s.name).toList()
+                ],
+                onChanged: (value) {
+                  widget.onServiceChanged(value == 'الكل' ? null : value);
+                },
+                icon: Icons.work,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildFilterDropdown(
+                label: 'ترتيب حسب',
+                value: widget.sortBy,
+                items: const ['name', 'city', 'category', 'featured'],
+                itemLabels: const ['الاسم', 'المدينة', 'الفئة', 'المميز أولاً'],
+                onChanged: (value) {
+                  if (value != null) widget.onSortChanged(value);
+                },
+                icon: Icons.sort,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -389,7 +423,7 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest>
               final displayLabel = itemLabels != null &&
                   items.indexOf(item) < itemLabels.length
                   ? itemLabels[items.indexOf(item)]
-                  : _getDisplayLabel(item);
+                  : item;
 
               return DropdownMenuItem<String>(
                 value: item,
@@ -411,44 +445,5 @@ class _SearchFiltersGuestState extends State<SearchFiltersGuest>
         .toList();
     cities.sort();
     return cities;
-  }
-
-  List<String> _getUniqueServices() {
-    final services = <String>{};
-
-    // من الأصناف المحملة
-    for (var category in widget.allCategories) {
-      services.add(category.slug); // استخدم slug بدلاً من name
-    }
-
-    // من مقدمي الخدمات
-    for (var provider in widget.allProviders) {
-      services.add(provider.serviceType);
-    }
-
-    // إزالة القيم الفارغة وترتيب
-    final servicesList = services.where((s) => s.isNotEmpty).toList();
-    servicesList.sort();
-    return servicesList;
-  }
-
-  String _getDisplayLabel(String item) {
-    // تحويل الأسماء الإنجليزية للعربية
-    final Map<String, String> translations = {
-      'photography-production': 'إنتاج تصوير',
-      'design-graphics': 'تصميم جرافيك',
-      'printing-office': 'مكتب طباعة',
-      'digital-services': 'خدمات رقمية',
-      'photographer': 'مصور',
-      'video-editor': 'مونتاج فيديوهات',
-      'photo-editor': 'تعديل صور',
-      'printer': 'طباعة صور',
-      'name': 'الاسم',
-      'city': 'المدينة',
-      'service': 'نوع الخدمة',
-      'rating': 'التقييم',
-    };
-
-    return translations[item] ?? item;
   }
 }

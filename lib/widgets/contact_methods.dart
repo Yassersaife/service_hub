@@ -26,7 +26,7 @@ class ContactMethods extends StatelessWidget {
                 'اتصل الآن للحصول على استشارة فورية',
                 Icons.phone,
                 AppColors.primaryGradient,
-                    () => _makePhoneCall(provider.phoneNumber ?? '0599123456'),
+                    () => _makePhoneCall(provider.userPhone ?? '0599123456'),
               ),
 
               const SizedBox(height: 12),
@@ -36,7 +36,7 @@ class ContactMethods extends StatelessWidget {
                 'تواصل عبر واتساب لمناقشة التفاصيل',
                 Icons.chat,
                 AppColors.secondaryGradient,
-                    () => _sendWhatsAppMessage(provider.whatsappNumber ?? provider.phoneNumber ?? '0599123456'),
+                    () => _sendWhatsAppMessage(provider.whatsappNumber ?? provider.userPhone ?? '0599123456'),
               ),
 
               const SizedBox(height: 12),
@@ -50,7 +50,7 @@ class ContactMethods extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                    () => _sendEmail('contact@example.com', provider.name ?? 'مقدم الخدمة'),
+                    () => _sendEmail(provider.userEmail ?? 'contact@example.com', provider.displayName),
               ),
             ],
           ),
@@ -77,12 +77,13 @@ class ContactMethods extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _buildInfoRow(
-                  Icons.phone,
-                  'رقم الهاتف',
-                  provider.phoneNumber ?? '0599123456',
-                  AppColors.primary,
-                ),
+                if (provider.userPhone != null)
+                  _buildInfoRow(
+                    Icons.phone,
+                    'رقم الهاتف',
+                    provider.userPhone!,
+                    AppColors.primary,
+                  ),
 
                 const SizedBox(height: 16),
                 _buildInfoRow(
@@ -106,7 +107,7 @@ class ContactMethods extends StatelessWidget {
           ),
 
           // الشبكات الاجتماعية
-          if (provider.socialMedia.isNotEmpty) ...[
+          if (provider.socialMedia != null && provider.socialMedia!.isNotEmpty) ...[
             const SizedBox(height: 24),
             _buildSectionTitle('تابعني على'),
             const SizedBox(height: 16),
@@ -126,10 +127,10 @@ class ContactMethods extends StatelessWidget {
                 ],
               ),
               child: Column(
-                children: provider.socialMedia.entries.map((entry) {
+                children: provider.socialMedia!.entries.map((entry) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _buildSocialMediaButton(entry.key, entry.value),
+                    child: _buildSocialMediaButton(entry.key, entry.value.toString()),
                   );
                 }).toList(),
               ),

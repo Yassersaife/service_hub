@@ -94,6 +94,88 @@ class ApiClient {
     }
   }
 
+  // PUT request
+  static Future<ApiResponse> put(String endpoint, Map<String, dynamic> data) async {
+    try {
+      print('PUT: $baseUrl$endpoint');
+      print('Data: $data');
+
+      final response = await http.put(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: _headers,
+        body: json.encode(data),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      return ApiResponse(
+        success: false,
+        message: 'لا يوجد اتصال بالإنترنت',
+        data: null,
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'حدث خطأ: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // PATCH request (لـ admin operations)
+  static Future<ApiResponse> patch(String endpoint, Map<String, dynamic> data) async {
+    try {
+      print('PATCH: $baseUrl$endpoint');
+      print('Data: $data');
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: _headers,
+        body: json.encode(data),
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      return ApiResponse(
+        success: false,
+        message: 'لا يوجد اتصال بالإنترنت',
+        data: null,
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'حدث خطأ: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
+  // DELETE request
+  static Future<ApiResponse> delete(String endpoint) async {
+    try {
+      print('DELETE: $baseUrl$endpoint');
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: _headers,
+      );
+
+      return _handleResponse(response);
+    } on SocketException {
+      return ApiResponse(
+        success: false,
+        message: 'لا يوجد اتصال بالإنترنت',
+        data: null,
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'حدث خطأ: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
+
   // POST request مع ملفات (Multipart)
   static Future<ApiResponse> postMultipart({
     required String endpoint,
@@ -148,34 +230,6 @@ class ApiClient {
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-
-      return _handleResponse(response);
-    } on SocketException {
-      return ApiResponse(
-        success: false,
-        message: 'لا يوجد اتصال بالإنترنت',
-        data: null,
-      );
-    } catch (e) {
-      return ApiResponse(
-        success: false,
-        message: 'حدث خطأ: ${e.toString()}',
-        data: null,
-      );
-    }
-  }
-
-  // PUT request
-  static Future<ApiResponse> put(String endpoint, Map<String, dynamic> data) async {
-    try {
-      print('PUT: $baseUrl$endpoint');
-      print('Data: $data');
-
-      final response = await http.put(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: _headers,
-        body: json.encode(data),
-      );
 
       return _handleResponse(response);
     } on SocketException {
@@ -262,32 +316,6 @@ class ApiClient {
     }
   }
 
-  // DELETE request
-  static Future<ApiResponse> delete(String endpoint) async {
-    try {
-      print('DELETE: $baseUrl$endpoint');
-
-      final response = await http.delete(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: _headers,
-      );
-
-      return _handleResponse(response);
-    } on SocketException {
-      return ApiResponse(
-        success: false,
-        message: 'لا يوجد اتصال بالإنترنت',
-        data: null,
-      );
-    } catch (e) {
-      return ApiResponse(
-        success: false,
-        message: 'حدث خطأ: ${e.toString()}',
-        data: null,
-      );
-    }
-  }
-
   static ApiResponse _handleResponse(http.Response response) {
     try {
       print('Response Status: ${response.statusCode}');
@@ -301,11 +329,26 @@ class ApiClient {
           message: jsonData['message'] ?? 'تم بنجاح',
           data: jsonData['data'],
         );
+      } else if (response.statusCode == 422) {
+        // Laravel validation errors
+        String errorMessage = jsonData['message'] ?? 'خطأ في البيانات المرسلة';
+        if (jsonData['errors'] != null) {
+          final errors = jsonData['errors'] as Map<String, dynamic>;
+          final firstError = errors.values.first;
+          if (firstError is List && firstError.isNotEmpty) {
+            errorMessage = firstError.first.toString();
+          }
+        }
+        return ApiResponse(
+          success: false,
+          message: errorMessage,
+          data: jsonData,
+        );
       } else {
         return ApiResponse(
           success: false,
           message: jsonData['message'] ?? 'حدث خطأ',
-          data: jsonData['data'],
+          data: jsonData,
         );
       }
     } catch (e) {

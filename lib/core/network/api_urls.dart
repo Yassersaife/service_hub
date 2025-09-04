@@ -13,9 +13,11 @@ class ApiUrls {
   // Categories URLs
   // ====================
   static const String categories = '/categories';
-  // /categories/{slug}
-  // /categories/{categoryId}/services
-  // /categories/{categoryId}/providers
+
+  // ====================
+  // Services URLs
+  // ====================
+  static const String services = '/services';
 
   // ====================
   // Provider URLs
@@ -23,39 +25,19 @@ class ApiUrls {
   static const String providers = '/providers';
   static const String featuredProviders = '/providers/featured';
   static const String searchProviders = '/providers/search';
-  static const String myProfile = '/providers/my/profile';
-  static const String updateServices = '/providers/update-services';
-  static const String providerStatistics = '/providers/statistics';
-  static const String advancedSearch = '/providers/advanced-search';
-
-  // Provider Profile URLs
-  static const String providerProfile = '/providers/profile';
-  static const String uploadProfileImage = '/upload/profile-image';
-  static const String uploadPortfolioImage = '/upload/portfolio-image';
-
-  // /providers/{id}
-  // /providers/{id}/rating
-  // /providers/{id}/verify
-  // /providers/profile/{userId}
-  // /services/{serviceId}/providers
 
   // ====================
   // Helper Methods
   // ====================
 
-  /// بناء رابط Category مع slug
-  static String categoryBySlug(String slug) {
-    return '/categories/$slug';
+  /// بناء رابط Category مع ID
+  static String categoryById(String id) {
+    return '/categories/$id';
   }
 
-  /// بناء رابط Category services
-  static String categoryServices(String categoryId) {
-    return '/categories/$categoryId/services';
-  }
-
-  /// بناء رابط Category providers
-  static String categoryProviders(String categoryId) {
-    return '/categories/$categoryId/providers';
+  /// بناء رابط Service مع ID
+  static String serviceById(String id) {
+    return '/services/$id';
   }
 
   /// بناء رابط Provider مع ID
@@ -63,24 +45,24 @@ class ApiUrls {
     return '/providers/$id';
   }
 
-  /// بناء رابط Provider profile مع User ID
-  static String providerProfileById(String userId) {
-    return '/providers/profile/$userId';
+  /// بناء رابط المزودين حسب الخدمة
+  static String providersByService(String serviceId) {
+    return '/providers/service/$serviceId';
   }
 
-  /// بناء رابط Provider rating
-  static String providerRating(String providerId) {
-    return '/providers/$providerId/rating';
+  /// بناء رابط المزودين حسب الفئة
+  static String providersByCategory(String categoryId) {
+    return '/providers/category/$categoryId';
   }
 
-  /// بناء رابط Provider verification
-  static String providerVerification(String providerId) {
-    return '/providers/$providerId/verify';
+  /// بناء رابط تحديث حالة التوثيق (admin only)
+  static String updateProviderVerification(String providerId) {
+    return '/providers/$providerId/verification';
   }
 
-  /// بناء رابط Service providers
-  static String serviceProviders(String serviceId) {
-    return '/services/$serviceId/providers';
+  /// بناء رابط تحديث حالة المميز (admin only)
+  static String updateProviderFeatured(String providerId) {
+    return '/providers/$providerId/featured';
   }
 
   /// بناء رابط مع query parameters
@@ -88,10 +70,11 @@ class ApiUrls {
     if (params.isEmpty) return baseUrl;
 
     final queryString = params.entries
+        .where((e) => e.value != null && e.value.toString().isNotEmpty)
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value.toString())}')
         .join('&');
 
-    return '$baseUrl?$queryString';
+    return queryString.isEmpty ? baseUrl : '$baseUrl?$queryString';
   }
 
   /// بناء رابط البحث مع المعاملات
@@ -99,23 +82,31 @@ class ApiUrls {
     return withParams(searchProviders, searchParams);
   }
 
-  /// بناء رابط البحث المتقدم مع المعاملات
-  static String buildAdvancedSearchUrl(Map<String, dynamic> searchParams) {
-    return withParams(advancedSearch, searchParams);
+  /// بناء رابط الخدمات مع فلترة
+  static String buildServicesUrl({String? categoryId, String? search}) {
+    Map<String, dynamic> params = {};
+    if (categoryId != null) params['category_id'] = categoryId;
+    if (search != null) params['search'] = search;
+    return withParams(services, params);
   }
 
-  /// بناء رابط الفلترة حسب المدينة
+  /// بناء رابط البحث في المزودين حسب المدينة
   static String providersByCity(String city) {
-    return withParams(providers, {'city': city});
+    return buildSearchUrl({'city': city});
   }
 
-  /// بناء رابط الفلترة حسب نوع الخدمة
-  static String providersByServiceType(String serviceType) {
-    return withParams(providers, {'service_type': serviceType});
+  /// بناء رابط البحث في المزودين حسب الخدمة
+  static String providersSearchByService(String serviceId) {
+    return buildSearchUrl({'service_id': serviceId});
   }
 
-  /// بناء رابط الموثقين فقط
-  static String verifiedProviders() {
-    return withParams(providers, {'verified': '1'});
+  /// بناء رابط البحث في المزودين حسب الفئة
+  static String providersSearchByCategory(String categoryId) {
+    return buildSearchUrl({'category_id': categoryId});
+  }
+
+  /// بناء رابط البحث العام في المزودين
+  static String providersGeneralSearch(String searchTerm) {
+    return buildSearchUrl({'search': searchTerm});
   }
 }

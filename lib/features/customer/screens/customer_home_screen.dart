@@ -1,11 +1,14 @@
+import 'dart:developer';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:service_hub/models/category.dart' as app_models;
 import 'package:service_hub/features/customer/screens/all_providers_screen.dart';
 import 'package:service_hub/features/service_provider/models/provider_profile.dart';
 import 'package:service_hub/widgets/beautiful_provider_card.dart';
 import '../../service_provider/services/provider_service.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../services/services_api_service.dart';
-import '../../../models/service_models.dart';
 import 'customer_services_screen.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
@@ -16,10 +19,10 @@ class CustomerHomeScreen extends StatefulWidget {
 }
 
 class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
-  final _providerService = ProviderService();
+  final providerService = ProviderService();
   List<ProviderProfile> _topProviders = [];
   List<ProviderProfile> _newProviders = [];
-  List<ServiceCategory> _serviceCategories = [];
+  List<app_models.Category> _serviceCategories = [];
   bool _isLoading = true;
 
   @override
@@ -34,11 +37,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         _isLoading = true;
       });
 
-      final categories = await ServicesApiService.getAllServiceCategories();
-      final topRated = await _providerService.getTopRatedProviders(limit: 5);
-      final allProviders = await _providerService.getAllProviders();
-
-      allProviders.sort((a, b) => b.joinDate.compareTo(a.joinDate));
+      final categories = await ServicesApiService.getAllCategories();
+      final topRated = await providerService.getFeaturedProviders();
+      final allProviders = await providerService.getAllProviders();
 
       setState(() {
         _serviceCategories = categories;
@@ -60,7 +61,20 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       return Scaffold(
         backgroundColor: AppColors.background,
         body: const Center(
-          child: CircularProgressIndicator(),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text(
+                'جاري تحميل الخدمات...',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -268,13 +282,23 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             ? const Padding(
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
           child: Center(
-            child: Text(
-              'لا يتوفر خدمات حالياً',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.category_outlined,
+                  size: 64,
+                  color: Colors.grey,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'لا يتوفر خدمات حالياً',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
             ),
           ),
         )
@@ -345,7 +369,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            '${category.servicesCount} خدمة',
+                            '${category.servicesCount ?? 0} خدمة',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -426,13 +450,12 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     );
   }
 
-
-  void _navigateToCategory(ServiceCategory category) {
+  void _navigateToCategory(app_models.Category category) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CustomerServicesScreen(
-          initialServiceType: category.slug,
+          initialCategoryId: category.id.toString(),
           categoryName: category.name,
         ),
       ),

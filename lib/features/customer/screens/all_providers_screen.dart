@@ -194,7 +194,7 @@ class _AllProvidersScreenState extends State<AllProvidersScreen> {
                   children: [
                     // الاسم
                     Text(
-                      provider.name ?? 'مقدم الخدمة',
+                      provider.user?['name'] ?? 'مقدم الخدمة',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -215,7 +215,7 @@ class _AllProvidersScreenState extends State<AllProvidersScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        provider.getServiceLabel(),
+                        provider.categoryName ?? '',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -273,7 +273,7 @@ class _AllProvidersScreenState extends State<AllProvidersScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '${provider.portfolioImages.length} عمل',
+                            '${provider.portfolioImages?.length} عمل',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,

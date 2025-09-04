@@ -22,11 +22,12 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     _tabController = TabController(length: 3, vsync: this);
 
     // طباعة معلومات للتشخيص
-    print('Provider Name: ${widget.provider.name}');
+    print('Provider Name: ${widget.provider.displayName}');
+    print('Profile Image URL: ${widget.provider.profileImageUrl}');
     print('Profile Image: ${widget.provider.profileImage}');
-    print('Portfolio Images: ${widget.provider.portfolioImages}');
+    print('Portfolio Images: ${widget.provider.allPortfolioImages}');
     print('Social Media: ${widget.provider.socialMedia}');
-    print('Specialties: ${widget.provider.specialties}');
+    print('Services Count: ${widget.provider.servicesCount}');
   }
 
   @override
@@ -113,7 +114,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                             children: [
                               Flexible(
                                 child: Text(
-                                  widget.provider.name ?? 'مقدم الخدمة',
+                                  widget.provider.displayName,
                                   style: const TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold,
@@ -122,6 +123,22 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                                   textAlign: TextAlign.center,
                                 ),
                               ),
+                              if (widget.provider.isVerified) ...[
+                                const SizedBox(width: 8),
+                                const Icon(
+                                  Icons.verified,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ],
+                              if (widget.provider.isFeatured) ...[
+                                const SizedBox(width: 8),
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 24,
+                                ),
+                              ],
                             ],
                           ),
 
@@ -141,7 +158,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                               ),
                             ),
                             child: Text(
-                              widget.provider.getServiceLabel(),
+                              widget.provider.categoryName ?? 'غير محدد',
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.white,
@@ -198,7 +215,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   Expanded(
                     child: _buildQuickStat(
                       'الأعمال',
-                      '${widget.provider.portfolioImages.length}',
+                      '${widget.provider.allPortfolioImages.length}',
                       Icons.photo_library,
                       AppColors.secondary,
                     ),
@@ -206,8 +223,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildQuickStat(
-                      'التخصصات',
-                      '${widget.provider.specialties.length}',
+                      'الخدمات',
+                      '${widget.provider.servicesCount}',
                       Icons.star_outline,
                       AppColors.accent,
                     ),
@@ -257,12 +274,20 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   Widget _buildProfileImage() {
-    if (widget.provider.profileImage != null && widget.provider.profileImage!.isNotEmpty) {
-      print('Loading profile image: ${widget.provider.profileImage}');
+    // التحقق من profileImageUrl أولاً ثم profileImage
+    String? imageUrl;
+    if (widget.provider.profileImageUrl != null && widget.provider.profileImageUrl!.isNotEmpty) {
+      imageUrl = widget.provider.profileImageUrl;
+    } else if (widget.provider.profileImage != null && widget.provider.profileImage!.isNotEmpty) {
+      imageUrl = widget.provider.profileImage;
+    }
+
+    if (imageUrl != null) {
+      print('Loading profile image: $imageUrl');
       return ClipRRect(
         borderRadius: BorderRadius.circular(30),
         child: Image.network(
-          widget.provider.profileImage!,
+          imageUrl,
           fit: BoxFit.cover,
           width: 120,
           height: 120,
@@ -378,15 +403,15 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             const SizedBox(height: 20),
           ],
 
-          // التخصصات
-          if (widget.provider.specialties.isNotEmpty) ...[
+          // الخدمات المقدمة
+          if (widget.provider.hasServices) ...[
             _buildSectionCard(
-              'التخصصات والمهارات',
+              'الخدمات المقدمة',
               Icons.star_border,
               child: Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: widget.provider.specialties.map((specialty) {
+                children: widget.provider.services!.map((service) {
                   return Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -405,7 +430,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                       ),
                     ),
                     child: Text(
-                      specialty,
+                      service['name'] ?? 'خدمة',
                       style: TextStyle(
                         color: AppColors.primary,
                         fontSize: 13,
@@ -442,11 +467,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   'المدينة',
                   widget.provider.city,
                 ),
-                if (widget.provider.phoneNumber != null && widget.provider.phoneNumber!.isNotEmpty)
+                if (widget.provider.userPhone != null && widget.provider.userPhone!.isNotEmpty)
                   _buildInfoRow(
                     Icons.phone_outlined,
                     'رقم الهاتف',
-                    widget.provider.phoneNumber!,
+                    widget.provider.userPhone!,
                   ),
               ],
             ),
@@ -457,9 +482,10 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   Widget _buildPortfolioTab() {
-    print('Building portfolio tab with ${widget.provider.portfolioImages.length} images');
+    final portfolioImages = widget.provider.allPortfolioImages;
+    print('Building portfolio tab with ${portfolioImages.length} images');
 
-    if (widget.provider.portfolioImages.isEmpty) {
+    if (portfolioImages.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -507,9 +533,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
           mainAxisSpacing: 16,
           childAspectRatio: 1,
         ),
-        itemCount: widget.provider.portfolioImages.length,
+        itemCount: portfolioImages.length,
         itemBuilder: (context, index) {
-          final imageUrl = widget.provider.portfolioImages[index];
+          final imageUrl = portfolioImages[index];
           print('Building portfolio image $index: $imageUrl');
 
           return GestureDetector(
@@ -597,7 +623,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             Icons.contact_phone,
             child: Column(
               children: [
-                if (widget.provider.phoneNumber != null && widget.provider.phoneNumber!.isNotEmpty) ...[
+                if (widget.provider.userPhone != null && widget.provider.userPhone!.isNotEmpty) ...[
                   _buildContactButton(
                     'اتصال مباشر',
                     Icons.phone,
@@ -616,7 +642,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   const SizedBox(height: 12),
                 ],
                 // إذا لم توجد أرقام، استخدم رقم افتراضي
-                if ((widget.provider.phoneNumber == null || widget.provider.phoneNumber!.isEmpty) &&
+                if ((widget.provider.userPhone == null || widget.provider.userPhone!.isEmpty) &&
                     (widget.provider.whatsappNumber == null || widget.provider.whatsappNumber!.isEmpty)) ...[
                   _buildContactButton(
                     'تواصل معنا',
@@ -631,7 +657,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
 
           const SizedBox(height: 20),
 
-          // Social Media Section - فقط إذا كان موجود
           if (_hasSocialMedia()) ...[
             _buildSectionCard(
               'وسائل التواصل الاجتماعي',
@@ -647,16 +672,18 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   bool _hasSocialMedia() {
-    return widget.provider.socialMedia.isNotEmpty &&
-        widget.provider.socialMedia.values.any((value) => value.isNotEmpty);
+    return widget.provider.socialMedia != null &&
+        widget.provider.socialMedia!.isNotEmpty &&
+        widget.provider.socialMedia!.values.any((value) => value.toString().isNotEmpty);
   }
 
   List<Widget> _buildSocialMediaButtons() {
     List<Widget> buttons = [];
 
-    // Instagram
-    if (widget.provider.socialMedia['instagram'] != null &&
-        widget.provider.socialMedia['instagram']!.isNotEmpty) {
+    if (widget.provider.socialMedia == null) return buttons;
+
+    if (widget.provider.socialMedia!['instagram'] != null &&
+        widget.provider.socialMedia!['instagram'].toString().isNotEmpty) {
       buttons.add(_buildContactButton(
         'Instagram',
         Icons.camera_alt,
@@ -667,8 +694,8 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     }
 
     // Facebook
-    if (widget.provider.socialMedia['facebook'] != null &&
-        widget.provider.socialMedia['facebook']!.isNotEmpty) {
+    if (widget.provider.socialMedia!['facebook'] != null &&
+        widget.provider.socialMedia!['facebook'].toString().isNotEmpty) {
       buttons.add(_buildContactButton(
         'Facebook',
         Icons.facebook,
@@ -678,7 +705,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
       buttons.add(const SizedBox(height: 12));
     }
 
-    // إزالة آخر SizedBox
     if (buttons.isNotEmpty && buttons.last is SizedBox) {
       buttons.removeLast();
     }
@@ -687,7 +713,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   void _openInstagram() async {
-    final username = widget.provider.socialMedia['instagram'] ?? '';
+    final username = widget.provider.socialMedia?['instagram']?.toString() ?? '';
     if (username.isEmpty) return;
 
     final instagramUrl = 'https://instagram.com/$username';
@@ -711,7 +737,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   void _openFacebook() async {
-    final username = widget.provider.socialMedia['facebook'] ?? '';
+    final username = widget.provider.socialMedia?['facebook']?.toString() ?? '';
     if (username.isEmpty) return;
 
     final facebookUrl = 'https://facebook.com/$username';
@@ -839,10 +865,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   void _makePhoneCall() async {
-    // استخدم رقم المزود إذا كان متوفراً، وإلا استخدم رقم افتراضي
-    final phoneNumber = widget.provider.phoneNumber?.isNotEmpty == true
-        ? widget.provider.phoneNumber!
-        : ''; // الرقم من شاشة About
+    final phoneNumber = widget.provider.userPhone?.isNotEmpty == true
+        ? widget.provider.userPhone!
+        : '';
 
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
 
@@ -859,14 +884,13 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   void _sendWhatsApp() async {
-    // استخدم رقم الواتساب إذا كان متوفراً، وإلا استخدم رقم الهاتف، وإلا الرقم الافتراضي
     final phoneNumber = widget.provider.whatsappNumber?.isNotEmpty == true
         ? widget.provider.whatsappNumber!
-        : (widget.provider.phoneNumber?.isNotEmpty == true
-        ? widget.provider.phoneNumber!
+        : (widget.provider.userPhone?.isNotEmpty == true
+        ? widget.provider.userPhone!
         : '0568972337');
 
-    final message = 'مرحباً ${widget.provider.name ?? ''}, أريد الاستفسار عن خدمة ${widget.provider.getServiceLabel()}';
+    final message = 'مرحباً ${widget.provider.displayName}, أريد الاستفسار عن خدمة ${widget.provider.categoryName ?? "الخدمة"}';
     final Uri whatsappUri = Uri.parse(
         'https://wa.me/${phoneNumber.replaceAll('+', '')}?text=${Uri.encodeComponent(message)}');
 

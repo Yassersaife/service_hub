@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:service_hub/features/auth/services/auth_service.dart';
 import 'package:service_hub/features/service_provider/models/provider_profile.dart';
 import 'package:service_hub/features/service_provider/services/provider_service.dart';
-import 'package:service_hub/models/service_models.dart';
+import 'package:service_hub/models/service.dart';
+import 'package:service_hub/models/category.dart';
 import 'package:service_hub/screens/welcome_screen.dart';
 import 'package:service_hub/services/services_api_service.dart';
 import '../../../core/utils/app_colors.dart';
@@ -21,10 +22,8 @@ class _AdminScreenState extends State<AdminScreen>
   late TabController _tabController;
 
   List<ProviderProfile> _allProviders = [];
-  List<ServiceCategory> _serviceCategories = [];
+  List<Category> _categories = [];
   bool _isLoading = true;
-
-  List<String> _featuredProviders = [];
 
   final _adminService = AdminService();
 
@@ -48,17 +47,16 @@ class _AdminScreenState extends State<AdminScreen>
 
     try {
       final providerService = ProviderService();
-      final providers = await providerService.getAllProvidersadmin();
-      final categories = await ServicesApiService.getAllServiceCategories();
+      final providers = await providerService.getAllProvidersAdmin();
+      final categories = await ServicesApiService.getAllCategories();
 
       setState(() {
         _allProviders = providers;
-        _serviceCategories = categories;
+        _categories = categories;
         _isLoading = false;
-        print('-===============');
-        print(_allProviders);
       });
     } catch (e) {
+      print('خطأ في تحميل البيانات: $e');
       setState(() {
         _isLoading = false;
       });
@@ -97,7 +95,7 @@ class _AdminScreenState extends State<AdminScreen>
           indicatorColor: AppColors.primary,
           tabs: const [
             Tab(text: 'مقدمي الخدمات'),
-            Tab(text: 'الخدمات'),
+            Tab(text: 'الفئات'),
           ],
         ),
       ),
@@ -114,7 +112,7 @@ class _AdminScreenState extends State<AdminScreen>
               controller: _tabController,
               children: [
                 _buildProvidersTab(),
-                _buildServicesTab(),
+                _buildCategoriesTab(),
               ],
             ),
           ),
@@ -126,7 +124,7 @@ class _AdminScreenState extends State<AdminScreen>
   Widget _buildQuickStats() {
     final totalProviders = _allProviders.length;
     final verifiedProviders = _allProviders.where((p) => p.isVerified).length;
-    final featuredProviders = _allProviders.where((p) => p.isfeatured).length;
+    final featuredProviders = _allProviders.where((p) => p.isFeatured).length;
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -213,7 +211,7 @@ class _AdminScreenState extends State<AdminScreen>
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: provider.isfeatured
+              border: provider.isFeatured
                   ? Border.all(color: AppColors.accent, width: 2)
                   : null,
               boxShadow: [
@@ -238,25 +236,7 @@ class _AdminScreenState extends State<AdminScreen>
                     ),
                     borderRadius: BorderRadius.circular(25),
                   ),
-                  child: provider.profileImage != null
-                      ? ClipRRect(
-                    borderRadius: BorderRadius.circular(25),
-                    child: Image.network(
-                      provider.profileImage!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Icon(
-                            provider.getServiceIcon(),
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                    ),
-                  )
-                      : Icon(
-                    provider.getServiceIcon(),
-                    color: Colors.white,
-                    size: 24,
-                  ),
+                  child: _buildProviderImage(provider),
                 ),
 
                 const SizedBox(width: 12),
@@ -270,7 +250,7 @@ class _AdminScreenState extends State<AdminScreen>
                         children: [
                           Flexible(
                             child: Text(
-                              provider.name ?? 'مقدم الخدمة',
+                              provider.displayName,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -286,7 +266,7 @@ class _AdminScreenState extends State<AdminScreen>
                               size: 16,
                             ),
                           ],
-                          if (provider.isfeatured) ...[
+                          if (provider.isFeatured) ...[
                             const SizedBox(width: 8),
                             const Icon(
                               Icons.star,
@@ -298,7 +278,7 @@ class _AdminScreenState extends State<AdminScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${provider.getServiceLabel()} • ${provider.city}',
+                        '${provider.categoryName ?? 'غير محدد'} • ${provider.city}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF64748B),
@@ -345,7 +325,7 @@ class _AdminScreenState extends State<AdminScreen>
                       child: ElevatedButton(
                         onPressed: () => _toggleFeatured(provider),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: provider.isfeatured
+                          backgroundColor: provider.isFeatured
                               ? AppColors.accent.withOpacity(0.2)
                               : Colors.grey.withOpacity(0.1),
                           foregroundColor: AppColors.accent,
@@ -353,7 +333,7 @@ class _AdminScreenState extends State<AdminScreen>
                           padding: EdgeInsets.zero,
                         ),
                         child: Text(
-                          provider.isfeatured ? 'إزالة مميز' : 'جعل مميز',
+                          provider.isFeatured ? 'إزالة مميز' : 'جعل مميز',
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
@@ -371,21 +351,61 @@ class _AdminScreenState extends State<AdminScreen>
     );
   }
 
-  Widget _buildServicesTab() {
+  Widget _buildProviderImage(ProviderProfile provider) {
+    if (provider.profileImageUrl != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(25),
+        child: Image.network(
+          provider.profileImageUrl!,
+          fit: BoxFit.cover,
+          width: 50,
+          height: 50,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            provider.getServiceIcon(),
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+      );
+    } else if (provider.profileImage != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(25),
+        child: Image.network(
+          provider.profileImage!,
+          fit: BoxFit.cover,
+          width: 50,
+          height: 50,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            provider.getServiceIcon(),
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+      );
+    } else {
+      return Icon(
+        provider.getServiceIcon(),
+        color: Colors.white,
+        size: 24,
+      );
+    }
+  }
+
+  Widget _buildCategoriesTab() {
     return RefreshIndicator(
       onRefresh: _loadData,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _serviceCategories.length + 1,
+        itemCount: _categories.length + 1,
         itemBuilder: (context, index) {
-          // زر إضافة خدمة جديدة
-          if (index == _serviceCategories.length) {
+          // زر إضافة فئة جديدة
+          if (index == _categories.length) {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: _showAddServiceDialog,
+                  onTap: _showAddCategoryDialog,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(20),
@@ -407,7 +427,7 @@ class _AdminScreenState extends State<AdminScreen>
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'إضافة خدمة جديدة',
+                          'إضافة فئة جديدة',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -422,7 +442,7 @@ class _AdminScreenState extends State<AdminScreen>
             );
           }
 
-          final category = _serviceCategories[index];
+          final category = _categories[index];
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
@@ -469,7 +489,7 @@ class _AdminScreenState extends State<AdminScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${category.servicesCount} تخصص',
+                        '${category.servicesCount ?? 0} خدمة',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF64748B),
@@ -481,12 +501,12 @@ class _AdminScreenState extends State<AdminScreen>
 
                 // زر حذف
                 IconButton(
-                  onPressed: () => _deleteServiceCategory(category),
+                  onPressed: () => _deleteCategory(category),
                   icon: const Icon(
                     Icons.delete,
                     color: Colors.red,
                   ),
-                  tooltip: 'حذف الخدمة',
+                  tooltip: 'حذف الفئة',
                 ),
               ],
             ),
@@ -499,13 +519,13 @@ class _AdminScreenState extends State<AdminScreen>
   // API functions
   void _toggleVerification(ProviderProfile provider) async {
     final success = await _adminService.updateProviderVerification(
-      provider.userId,
+      provider.id.toString(),
       !provider.isVerified,
     );
 
     if (success) {
       setState(() {
-        final index = _allProviders.indexWhere((p) => p.userId == provider.userId);
+        final index = _allProviders.indexWhere((p) => p.id == provider.id);
         if (index != -1) {
           _allProviders[index] = provider.copyWith(isVerified: !provider.isVerified);
         }
@@ -515,8 +535,8 @@ class _AdminScreenState extends State<AdminScreen>
         SnackBar(
           content: Text(
             provider.isVerified
-                ? 'تم إلغاء توثيق ${provider.name}'
-                : 'تم توثيق ${provider.name}',
+                ? 'تم إلغاء توثيق ${provider.displayName}'
+                : 'تم توثيق ${provider.displayName}',
           ),
           backgroundColor: provider.isVerified ? Colors.red : Colors.green,
         ),
@@ -533,27 +553,26 @@ class _AdminScreenState extends State<AdminScreen>
 
   void _toggleFeatured(ProviderProfile provider) async {
     final success = await _adminService.updateProviderFeatured(
-      provider.userId,
-      !provider.isfeatured,
+      provider.id.toString(),
+      !provider.isFeatured,
     );
 
     if (success) {
       setState(() {
-        final index = _allProviders.indexWhere((p) => p.userId == provider.userId);
+        final index = _allProviders.indexWhere((p) => p.id == provider.id);
         if (index != -1) {
-          _allProviders[index] =
-              provider.copyWith(isfeatured: !provider.isfeatured);
+          _allProviders[index] = provider.copyWith(isFeatured: !provider.isFeatured);
         }
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            provider.isfeatured
-                ? 'تم إزالة ${provider.name} من المميزين'
-                : 'تم إضافة ${provider.name} للمميزين',
+            provider.isFeatured
+                ? 'تم إزالة ${provider.displayName} من المميزين'
+                : 'تم إضافة ${provider.displayName} للمميزين',
           ),
-          backgroundColor: provider.isfeatured ? Colors.orange : AppColors.accent,
+          backgroundColor: provider.isFeatured ? Colors.orange : AppColors.accent,
         ),
       );
     } else {
@@ -601,39 +620,22 @@ class _AdminScreenState extends State<AdminScreen>
     }
   }
 
-  void _showAddServiceDialog() {
+  void _showAddCategoryDialog() {
     final nameController = TextEditingController();
-    final specialtiesController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('إضافة خدمة جديدة'),
+        title: const Text('إضافة فئة جديدة'),
         content: SizedBox(
           width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'اسم الخدمة',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              TextField(
-                controller: specialtiesController,
-                decoration: const InputDecoration(
-                  labelText: 'التخصصات (فصل بفاصلة)',
-                  hintText: 'مثال: تصوير أفراح, تصوير منتجات, تصوير شخصي',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-            ],
+          child: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'اسم الفئة',
+              hintText: 'مثال: خدمات التصوير',
+              border: OutlineInputBorder(),
+            ),
           ),
         ),
         actions: [
@@ -644,10 +646,7 @@ class _AdminScreenState extends State<AdminScreen>
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isNotEmpty) {
-                _addNewServiceCategory(
-                  nameController.text.trim(),
-                  specialtiesController.text.trim(),
-                );
+                _addNewCategory(nameController.text.trim());
                 Navigator.pop(context);
               }
             },
@@ -658,69 +657,34 @@ class _AdminScreenState extends State<AdminScreen>
     );
   }
 
-  void _addNewServiceCategory(String name, String specialtiesText) async {
-    final specialties = specialtiesText
-        .split(',')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
-
-    final success = await _adminService.createServiceCategory(name, specialties);
+  void _addNewCategory(String name) async {
+    final success = await _adminService.createServiceCategory(name);
 
     if (success) {
-      setState(() {
-        final newCategory = ServiceCategory(
-          id: DateTime.now().millisecondsSinceEpoch,
-          name: name,
-          nameEn: name.toLowerCase().replaceAll(' ', '-'),
-          slug: name.toLowerCase().replaceAll(' ', '-'),
-          icon: 'category',
-          color: '#3B82F6',
-          gradientColors: ['#3B82F6', '#1E40AF'],
-          description: name,
-          isActive: true,
-          sortOrder: _serviceCategories.length + 1,
-          services: specialties.map((specialty) => Service(
-            id: DateTime.now().millisecondsSinceEpoch,
-            name: specialty,
-            nameEn: specialty.toLowerCase().replaceAll(' ', '-'),
-            slug: specialty.toLowerCase().replaceAll(' ', '-'),
-            description: specialty,
-            isActive: true,
-            sortOrder: 1,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          )).toList(),
-          servicesCount: specialties.length,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-
-        _serviceCategories.add(newCategory);
-      });
+      await _loadData(); // إعادة تحميل البيانات
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم إضافة خدمة "$name" مع ${specialties.length} تخصص'),
+          content: Text('تم إضافة فئة "$name"'),
           backgroundColor: AppColors.secondary,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('حدث خطأ أثناء إضافة الخدمة'),
+          content: Text('حدث خطأ أثناء إضافة الفئة'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
 
-  void _deleteServiceCategory(ServiceCategory category) {
+  void _deleteCategory(Category category) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('تأكيد الحذف'),
-        content: Text('هل أنت متأكد من حذف خدمة "${category.name}"؟'),
+        content: Text('هل أنت متأكد من حذف فئة "${category.name}"؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -730,26 +694,17 @@ class _AdminScreenState extends State<AdminScreen>
             onPressed: () async {
               Navigator.pop(context);
 
-              final success = await _adminService.deleteServiceCategory(category.id);
+              final success = await _adminService.deleteServiceCategory(category.id.toString());
 
               if (success) {
                 setState(() {
-                  _serviceCategories.removeWhere((c) => c.id == category.id);
+                  _categories.removeWhere((c) => c.id == category.id);
                 });
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('تم حذف "${category.name}"'),
                     backgroundColor: Colors.red,
-                    action: SnackBarAction(
-                      label: 'تراجع',
-                      textColor: Colors.white,
-                      onPressed: () {
-                        setState(() {
-                          _serviceCategories.add(category);
-                        });
-                      },
-                    ),
                   ),
                 );
               } else {

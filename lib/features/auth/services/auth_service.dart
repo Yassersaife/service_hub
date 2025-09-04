@@ -67,8 +67,8 @@ class AuthService {
   static Future<ApiResponse> logout() async {
     final response = await ApiClient.post(ApiUrls.logout, {});
 
-    await NetworkHelper.removeToken();
-    await NetworkHelper.removeUserData();
+    // امسح البيانات المحلية حتى لو فشل الطلب
+    await NetworkHelper.clearAuthData();
     ApiClient.clearToken();
     _currentUser = null;
 
@@ -79,8 +79,11 @@ class AuthService {
     final response = await ApiClient.get(ApiUrls.getUser);
 
     if (response.success && response.data != null) {
-      _currentUser = response.data;
-      await NetworkHelper.saveUserData(response.data);
+      // Laravel API يرجع data: { user: {...} }
+      if (response.data['user'] != null) {
+        _currentUser = response.data['user'];
+        await NetworkHelper.saveUserData(response.data['user']);
+      }
     }
 
     return response;
@@ -91,8 +94,15 @@ class AuthService {
     if (token != null) {
       ApiClient.setToken(token);
 
+      // تحميل بيانات المستخدم إذا لم تكن محملة
       if (_currentUser == null) {
         _currentUser = await NetworkHelper.getUserData();
+      }
+
+      // التحقق من صحة التوكن
+      if (_currentUser == null) {
+        final userResponse = await getUser();
+        return userResponse.success;
       }
 
       return true;
@@ -108,6 +118,7 @@ class AuthService {
     }
   }
 
+  // Helper getters
   static String? get userName {
     return _currentUser?['name'];
   }
@@ -116,8 +127,17 @@ class AuthService {
     return _currentUser?['email'];
   }
 
+  static String? get userPhone {
+    return _currentUser?['phone'];
+  }
+
   static String? get userType {
     return _currentUser?['user_type'];
+  }
+
+  static int? get userId {
+    final id = _currentUser?['id'];
+    return id is int ? id : (id != null ? int.tryParse(id.toString()) : null);
   }
 
   static bool get isProvider {
@@ -126,5 +146,39 @@ class AuthService {
 
   static bool get isCustomer {
     return userType == 'customer';
+  }
+
+  static bool get isEmailVerified {
+    return _currentUser?['email_verified_at'] != null;
+  }
+
+  static DateTime? get emailVerifiedAt {
+    final dateStr = _currentUser?['email_verified_at'];
+    return dateStr != null ? DateTime.tryParse(dateStr) : null;
+  }
+
+  static DateTime? get createdAt {
+    final dateStr = _currentUser?['created_at'];
+    return dateStr != null ? DateTime.tryParse(dateStr) : null;
+  }
+
+  static Map<String, dynamic>? get providerProfile {
+    return _currentUser?['provider_profile'];
+  }
+
+  static bool get hasProviderProfile {
+    return providerProfile != null;
+  }
+
+  // Helper methods
+  static Future<void> updateUserData(Map<String, dynamic> userData) async {
+    _currentUser = userData;
+    await NetworkHelper.saveUserData(userData);
+  }
+
+  static Future<void> clearUserData() async {
+    await NetworkHelper.clearAuthData();
+    ApiClient.clearToken();
+    _currentUser = null;
   }
 }

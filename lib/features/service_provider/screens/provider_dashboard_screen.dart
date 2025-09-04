@@ -1,4 +1,4 @@
-// lib/features/service_provider/screens/provider_dashboard_screen.dart - With Delete Account
+// lib/features/service_provider/screens/provider_dashboard_screen.dart - Fixed
 import 'package:flutter/material.dart';
 import 'package:service_hub/core/utils/app_colors.dart';
 import 'package:service_hub/features/auth/screens/login_screen.dart';
@@ -20,7 +20,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   final _providerService = ProviderService();
   ProviderProfile? _profile;
   bool _isLoading = true;
-  bool _isDeletingAccount = false; // إضافة هذا المتغير
+  bool _isDeletingAccount = false;
   String? _errorMessage;
 
   @override
@@ -50,7 +50,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         // محاولة جلب الملف الشخصي
         try {
           profile = await _providerService.getMyProfile();
-          print('تم جلب الملف الشخصي من getMyProfile: ${profile?.name}');
+          print('تم جلب الملف الشخصي من getMyProfile: ${profile?.displayName}');
         } catch (e) {
           print('فشل getMyProfile: $e');
         }
@@ -60,7 +60,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           try {
             final userIdString = user['id'].toString();
             profile = await _providerService.getProfile(userIdString);
-            print('تم جلب الملف الشخصي من getProfile: ${profile?.name}');
+            print('تم جلب الملف الشخصي من getProfile: ${profile?.displayName}');
           } catch (e) {
             print('فشل getProfile: $e');
           }
@@ -169,9 +169,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
   bool _shouldShowWelcomeScreen() {
     if (_profile == null) return true;
-
-    if (!_profile!.isProfileComplete) return true;
-
+    if (!_profile!.isComplete) return true;
     return false;
   }
 
@@ -188,7 +186,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          // تعديل AppBar لإضافة قائمة منسدلة
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -489,7 +486,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             ),
             child: FlexibleSpaceBar(
               title: Text(
-                'مرحباً ${profile.name ?? AuthService.currentUser?['name']?.toString() ?? 'المستخدم'}',
+                'مرحباً ${profile.displayName}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -499,7 +496,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             ),
           ),
           actions: [
-            // تعديل الـ actions لإضافة قائمة منسدلة
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert, color: Colors.white),
               onSelected: (value) {
@@ -725,24 +721,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   ),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: profile.profileImage != null
-                    ? ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Image.network(
-                    profile.profileImage!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Icon(
-                      profile.getServiceIcon(),
-                      color: Colors.white,
-                      size: 35,
-                    ),
-                  ),
-                )
-                    : Icon(
-                  profile.getServiceIcon(),
-                  color: Colors.white,
-                  size: 35,
-                ),
+                child: _buildProfileImage(profile),
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -750,7 +729,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      profile.name ?? AuthService.currentUser?['name']?.toString() ?? 'مقدم الخدمة',
+                      profile.displayName,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -759,7 +738,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      profile.getServiceLabel(),
+                      profile.categoryName ?? 'غير محدد',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -826,6 +805,46 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildProfileImage(ProviderProfile profile) {
+    if (profile.profileImageUrl != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Image.network(
+          profile.profileImageUrl!,
+          fit: BoxFit.cover,
+          width: 70,
+          height: 70,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            profile.getServiceIcon(),
+            color: Colors.white,
+            size: 35,
+          ),
+        ),
+      );
+    } else if (profile.profileImage != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Image.network(
+          profile.profileImage!,
+          fit: BoxFit.cover,
+          width: 70,
+          height: 70,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            profile.getServiceIcon(),
+            color: Colors.white,
+            size: 35,
+          ),
+        ),
+      );
+    } else {
+      return Icon(
+        profile.getServiceIcon(),
+        color: Colors.white,
+        size: 35,
+      );
+    }
   }
 
   Widget _buildEditProfileButton() {
@@ -901,13 +920,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     );
   }
 
-
   void _handleDeleteAccount() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('حذف الحساب'),
-        content: const Text('هل أنت متأكد؟'),
+        content: const Text(
+          'هل أنت متأكد من حذف الحساب نهائياً؟\n\nسيتم حذف جميع البيانات ولن تتمكن من استرجاعها.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -915,22 +935,61 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('حذف',
-            style: TextStyle(color: Colors.red),),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text(
+              'حذف نهائياً',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
     );
 
     if (confirmed == true) {
-      final success = await _providerService.deleteAccount();
+      setState(() {
+        _isDeletingAccount = true;
+      });
 
-      if (success) {
-        await AuthService.logout();
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-        );
+      try {
+        // استخدام ProviderService لحذف البروفايل
+        final success = await _providerService.deleteProvider(_profile!.id.toString());
+
+        if (success) {
+          await AuthService.logout();
+          if (mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                  (route) => false,
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('حدث خطأ أثناء حذف الحساب'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('حدث خطأ أثناء حذف الحساب: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isDeletingAccount = false;
+          });
+        }
       }
     }
   }
@@ -994,9 +1053,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     if (shouldLogout == true) {
       await AuthService.logout();
       if (mounted) {
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+              (route) => false,
         );
       }
     }

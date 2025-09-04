@@ -58,17 +58,7 @@ class ServiceProviderCardGuest extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: profile.profileImage != null
-                        ? ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        profile.profileImage!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildDefaultAvatar(),
-                      ),
-                    )
-                        : _buildDefaultAvatar(),
+                    child: _buildProfileImage(),
                   ),
 
                   const SizedBox(width: 16),
@@ -83,7 +73,7 @@ class ServiceProviderCardGuest extends StatelessWidget {
                           children: [
                             Flexible(
                               child: Text(
-                                profile.name ?? 'مقدم الخدمة',
+                                profile.displayName,
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -108,6 +98,21 @@ class ServiceProviderCardGuest extends StatelessWidget {
                                 ),
                               ),
                             ],
+                            if (profile.isFeatured) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.amber,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.star,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
 
@@ -124,7 +129,7 @@ class ServiceProviderCardGuest extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            profile.getServiceLabel(),
+                            profile.categoryName ?? 'غير محدد',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -226,35 +231,54 @@ class ServiceProviderCardGuest extends StatelessWidget {
               ],
 
               // الجزء السفلي - الخدمات
-              if (profile.specialties.isNotEmpty) ...[
+              if (profile.hasServices && profile.services != null) ...[
                 Container(
-                  child:Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: profile.specialties.map((service) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: profile.getServiceColor().withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: profile.getServiceColor().withOpacity(0.3),
-                              ),
-                            ),
-                            child: Text(
-                              service,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: profile.getServiceColor(),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: profile.services!.map((service) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: profile.getServiceColor().withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: profile.getServiceColor().withOpacity(0.3),
+                          ),
+                        ),
+                        child: Text(
+                          service['name'] ?? 'خدمة',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: profile.getServiceColor(),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ] else if (profile.description != null && profile.description!.isNotEmpty) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    profile.description!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade700,
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ] else ...[
                 Container(
@@ -265,7 +289,7 @@ class ServiceProviderCardGuest extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      'لم يتم تحديد الخدمات بعد',
+                      'لم يتم تحديد معلومات إضافية',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
@@ -280,6 +304,34 @@ class ServiceProviderCardGuest extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildProfileImage() {
+    if (profile.profileImageUrl != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(
+          profile.profileImageUrl!,
+          fit: BoxFit.cover,
+          width: 80,
+          height: 80,
+          errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
+        ),
+      );
+    } else if (profile.profileImage != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(
+          profile.profileImage!,
+          fit: BoxFit.cover,
+          width: 80,
+          height: 80,
+          errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
+        ),
+      );
+    } else {
+      return _buildDefaultAvatar();
+    }
   }
 
   Widget _buildDefaultAvatar() {
