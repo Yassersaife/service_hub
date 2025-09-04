@@ -54,7 +54,6 @@ class ServicesApiService {
         categoryId: categoryId,
         search: search,
       );
-      print('===================== $url ');
       final response = await ApiClient.get(url);
 
       if (response.success && response.data != null) {
