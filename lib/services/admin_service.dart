@@ -166,9 +166,6 @@ class AdminService {
     return results;
   }
 
-  // ====================
-  // Helper Methods
-  // ====================
 
   Future<ApiResponse> getFullResponse(String endpoint, Map<String, dynamic> data, String method) async {
     try {

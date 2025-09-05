@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:service_hub/core/utils/app_colors.dart';
 import 'package:service_hub/features/auth/services/auth_service.dart';
-import 'package:service_hub/features/service_provider/models/profile_setup_data.dart';
 import 'package:service_hub/features/service_provider/models/provider_profile.dart';
+import 'package:service_hub/features/service_provider/models/profile_setup_data.dart';
 import 'package:service_hub/features/service_provider/services/provider_service.dart';
 import 'package:service_hub/features/service_provider/widgets/profile_progress_indicator.dart';
 import 'package:service_hub/features/service_provider/widgets/profile_setup_basic_info.dart';
-import 'package:service_hub/models/category.dart';
-import 'package:service_hub/features/service_provider/widgets/profile_setup_portfolio.dart';
 import 'package:service_hub/features/service_provider/widgets/profile_setup_contact.dart';
+import 'package:service_hub/features/service_provider/widgets/profile_setup_portfolio.dart';
 
 class ProviderProfileSetupScreen extends StatefulWidget {
   final ProviderProfile? existingProfile;
@@ -24,7 +23,8 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
   late TabController _tabController;
   final _providerService = ProviderService();
 
-  final ProfileSetupData _data = ProfileSetupData();
+  // Form data - shared between all steps
+  late ProfileSetupData _data;
 
   bool _isLoading = false;
   int _currentStep = 0;
@@ -36,20 +36,26 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
 
     if (widget.existingProfile != null) {
       _loadExistingData();
+    } else {
+      _data = ProfileSetupData();
     }
   }
 
   void _loadExistingData() {
     final profile = widget.existingProfile!;
-    _data.selectedCategoryId = profile.categoryId?.toString();
-    _data.selectedCity = profile.city;
-    _data.description = profile.description ?? '';
-    _data.whatsappNumber = profile.whatsappNumber ?? '';
-    _data.workHours = profile.workHours ?? '';
-    _data.address = profile.address ?? '';
-    _data.profileImagePath = profile.profileImageUrl ?? profile.profileImage;
-    _data.portfolioImages = profile.allPortfolioImages;
-    _data.socialMedia = Map.from(profile.socialMedia ?? {});
+
+    _data = ProfileSetupData.fromExistingProfile(
+      categoryId: profile.categoryId?.toString(),
+      city: profile.city,
+      existingAddress: profile.address,
+      existingDescription: profile.description,
+      existingWorkHours: profile.workHours,
+      existingWhatsapp: profile.whatsappNumber,
+      existingSocialMedia: profile.socialMedia,
+      existingProfileImage: profile.profileImageUrl ?? profile.profileImage,
+      existingPortfolioImages: profile.allPortfolioImages,
+      existingServices: profile.services, // إضافة التخصصات المحفوظة
+    );
   }
 
   @override
@@ -234,6 +240,20 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
       final user = AuthService.currentUser!;
       final userId = user['id'] is int ? user['id'] : int.parse(user['id'].toString());
 
+      List<Map<String, dynamic>>? servicesData;
+      if (_data.selectedServiceIds.isNotEmpty) {
+        servicesData = _data.selectedServiceIds.asMap().entries.map((entry) {
+          final index = entry.key;
+          final serviceId = entry.value;
+          return {
+            'id': int.parse(serviceId),
+            'name': index < _data.selectedServiceNames.length
+                ? _data.selectedServiceNames[index]
+                : 'خدمة',
+          };
+        }).toList();
+      }
+
       final profile = ProviderProfile(
         id: widget.existingProfile?.id ?? 0,
         userId: userId,
@@ -251,6 +271,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
         isComplete: true,
         createdAt: widget.existingProfile?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
+        services: servicesData, // إضافة بيانات الخدمات
       );
 
       final success = await _providerService.saveProfile(profile);

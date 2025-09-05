@@ -47,7 +47,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
         ProviderProfile? profile;
 
-        // محاولة جلب الملف الشخصي
         try {
           profile = await _providerService.getMyProfile();
           print('تم جلب الملف الشخصي من getMyProfile: ${profile?.displayName}');
@@ -55,7 +54,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           print('فشل getMyProfile: $e');
         }
 
-        // إذا فشل، جرب بالـ user ID مع تحويل إلى String
         if (profile == null) {
           try {
             final userIdString = user['id'].toString();

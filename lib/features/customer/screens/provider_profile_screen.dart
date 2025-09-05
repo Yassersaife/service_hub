@@ -22,12 +22,17 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     _tabController = TabController(length: 3, vsync: this);
 
     // طباعة معلومات للتشخيص
+    print('=== تشخيص بيانات المزود ===');
     print('Provider Name: ${widget.provider.displayName}');
+    print('Services Count: ${widget.provider.servicesCount}');
+    print('Has Services: ${widget.provider.hasServices}');
+    print('Services Data: ${widget.provider.services}');
+    print('Category Name: ${widget.provider.categoryName}');
+    print('Description: ${widget.provider.description}');
     print('Profile Image URL: ${widget.provider.profileImageUrl}');
-    print('Profile Image: ${widget.provider.profileImage}');
     print('Portfolio Images: ${widget.provider.allPortfolioImages}');
     print('Social Media: ${widget.provider.socialMedia}');
-    print('Services Count: ${widget.provider.servicesCount}');
+    print('============================');
   }
 
   @override
@@ -224,9 +229,13 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   Expanded(
                     child: _buildQuickStat(
                       'الخدمات',
-                      '${widget.provider.servicesCount}',
+                      widget.provider.hasServices
+                          ? '${widget.provider.servicesCount}'
+                          : 'لا يوجد',
                       Icons.star_outline,
-                      AppColors.accent,
+                      widget.provider.hasServices
+                          ? AppColors.accent
+                          : Colors.grey,
                     ),
                   ),
                 ],
@@ -403,42 +412,179 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             const SizedBox(height: 20),
           ],
 
-          // الخدمات المقدمة
-          if (widget.provider.hasServices) ...[
+          // الخدمات المقدمة - محسّن
+          if (widget.provider.hasServices && widget.provider.services != null && widget.provider.services!.isNotEmpty) ...[
             _buildSectionCard(
-              'الخدمات المقدمة',
+              'الخدمات المقدمة (${widget.provider.servicesCount})',
               Icons.star_border,
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: widget.provider.services!.map((service) {
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: widget.provider.services!.map<Widget>((service) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          AppColors.primary.withOpacity(0.15),
-                          AppColors.primary.withOpacity(0.08),
+                          AppColors.primary.withOpacity(0.05),
+                          AppColors.primary.withOpacity(0.02),
                         ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.primary.withOpacity(0.3),
+                        color: AppColors.primary.withOpacity(0.2),
                       ),
                     ),
-                    child: Text(
-                      service['name'] ?? 'خدمة',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Icon(
+                            Icons.work_outline,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                service['name']?.toString() ?? 'خدمة غير محددة',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              if (service['description'] != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  service['description'].toString(),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                    height: 1.4,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                              if (service['price'] != null) ...[
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'السعر: ${service['price']} ₪',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }).toList(),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ] else ...[
+            // عرض رسالة عدم وجود خدمات مع التخصص الرئيسي
+            _buildSectionCard(
+              'الخدمات والتخصصات',
+              Icons.info_outline,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: widget.provider.getServiceColor().withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(40),
+                      ),
+                      child: Icon(
+                        widget.provider.getServiceIcon(),
+                        size: 40,
+                        color: widget.provider.getServiceColor(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (widget.provider.categoryName != null) ...[
+                      Text(
+                        widget.provider.categoryName!,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: widget.provider.getServiceColor(),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'التخصص الرئيسي لمقدم الخدمة',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info,
+                            color: Colors.orange,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'لم يتم إضافة خدمات تفصيلية بعد',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.orange[800],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -473,6 +619,16 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                     'رقم الهاتف',
                     widget.provider.userPhone!,
                   ),
+                _buildInfoRow(
+                  Icons.schedule,
+                  'مدة الخبرة',
+                  widget.provider.getExperienceText(),
+                ),
+                _buildInfoRow(
+                  Icons.verified_user,
+                  'حالة الحساب',
+                  widget.provider.statusText,
+                ),
               ],
             ),
           ),
@@ -636,12 +792,11 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   _buildContactButton(
                     'واتساب',
                     Icons.chat,
-                    AppColors.secondary,
+                    const Color(0xFF25D366),
                         () => _sendWhatsApp(),
                   ),
                   const SizedBox(height: 12),
                 ],
-                // إذا لم توجد أرقام، استخدم رقم افتراضي
                 if ((widget.provider.userPhone == null || widget.provider.userPhone!.isEmpty) &&
                     (widget.provider.whatsappNumber == null || widget.provider.whatsappNumber!.isEmpty)) ...[
                   _buildContactButton(
@@ -693,7 +848,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
       buttons.add(const SizedBox(height: 12));
     }
 
-    // Facebook
     if (widget.provider.socialMedia!['facebook'] != null &&
         widget.provider.socialMedia!['facebook'].toString().isNotEmpty) {
       buttons.add(_buildContactButton(
@@ -701,6 +855,17 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
         Icons.facebook,
         const Color(0xFF1877F2),
             () => _openFacebook(),
+      ));
+      buttons.add(const SizedBox(height: 12));
+    }
+
+    if (widget.provider.socialMedia!['website'] != null &&
+        widget.provider.socialMedia!['website'].toString().isNotEmpty) {
+      buttons.add(_buildContactButton(
+        'موقع الويب',
+        Icons.language,
+        const Color(0xFF4285F4),
+            () => _openWebsite(),
       ));
       buttons.add(const SizedBox(height: 12));
     }
@@ -741,12 +906,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     if (username.isEmpty) return;
 
     final facebookUrl = 'https://facebook.com/$username';
-    final facebookAppUrl = 'fb://profile/$username';
 
     try {
-      if (await canLaunchUrl(Uri.parse(facebookAppUrl))) {
-        await launchUrl(Uri.parse(facebookAppUrl));
-      } else if (await canLaunchUrl(Uri.parse(facebookUrl))) {
+      if (await canLaunchUrl(Uri.parse(facebookUrl))) {
         await launchUrl(
           Uri.parse(facebookUrl),
           mode: LaunchMode.externalApplication,
@@ -757,6 +919,30 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     } catch (e) {
       print('Error opening Facebook: $e');
       _showErrorSnackbar('تعذر فتح Facebook');
+    }
+  }
+
+  void _openWebsite() async {
+    final website = widget.provider.socialMedia?['website']?.toString() ?? '';
+    if (website.isEmpty) return;
+
+    String websiteUrl = website;
+    if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
+      websiteUrl = 'https://$websiteUrl';
+    }
+
+    try {
+      if (await canLaunchUrl(Uri.parse(websiteUrl))) {
+        await launchUrl(
+          Uri.parse(websiteUrl),
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        _showErrorSnackbar('تعذر فتح الموقع');
+      }
+    } catch (e) {
+      print('Error opening website: $e');
+      _showErrorSnackbar('تعذر فتح الموقع');
     }
   }
 
