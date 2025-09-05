@@ -5,6 +5,7 @@ import 'package:service_hub/features/auth/screens/login_screen.dart';
 import 'package:service_hub/features/auth/services/auth_service.dart';
 import 'package:service_hub/features/service_provider/models/provider_profile.dart';
 import 'package:service_hub/features/service_provider/services/provider_service.dart';
+import 'package:service_hub/screens/user_type_screen.dart';
 import 'package:service_hub/screens/welcome_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'provider_profile_setup_screen.dart';
@@ -951,7 +952,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       });
 
       try {
-        // استخدام ProviderService لحذف البروفايل
         final success = await _providerService.deleteProvider(_profile!.id.toString());
 
         if (success) {
@@ -959,7 +959,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           if (mounted) {
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+              MaterialPageRoute(builder: (context) => const UserTypeScreen()),
                   (route) => false,
             );
           }

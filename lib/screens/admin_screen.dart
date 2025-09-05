@@ -5,6 +5,7 @@ import 'package:service_hub/features/service_provider/models/provider_profile.da
 import 'package:service_hub/features/service_provider/services/provider_service.dart';
 import 'package:service_hub/models/service.dart';
 import 'package:service_hub/models/category.dart';
+import 'package:service_hub/screens/user_type_screen.dart';
 import 'package:service_hub/screens/welcome_screen.dart';
 import 'package:service_hub/services/services_api_service.dart';
 import '../../../core/utils/app_colors.dart';
@@ -614,7 +615,7 @@ class _AdminScreenState extends State<AdminScreen>
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+          MaterialPageRoute(builder: (context) => const UserTypeScreen()),
         );
       }
     }
