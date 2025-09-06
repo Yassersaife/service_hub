@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/screens/admin_screen.dart';
+import 'package:service_hub/features/admin/admin_screen.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';

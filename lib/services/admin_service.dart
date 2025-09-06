@@ -1,3 +1,4 @@
+// lib/services/admin_service.dart - النسخة المحدثة
 import 'package:service_hub/core/network/api_client.dart';
 import 'package:service_hub/core/network/api_urls.dart';
 
@@ -125,10 +126,6 @@ class AdminService {
     }
   }
 
-  // ====================
-  // Batch Operations
-  // ====================
-
   Future<Map<String, bool>> batchUpdateProviders({
     List<String>? verifyProviders,
     List<String>? unverifyProviders,
@@ -164,26 +161,5 @@ class AdminService {
     }
 
     return results;
-  }
-
-
-  Future<ApiResponse> getFullResponse(String endpoint, Map<String, dynamic> data, String method) async {
-    try {
-      switch (method.toUpperCase()) {
-        case 'POST':
-          return await ApiClient.post(endpoint, data);
-        case 'PUT':
-          return await ApiClient.put(endpoint, data);
-        case 'PATCH':
-          return await ApiClient.patch(endpoint, data);
-        case 'DELETE':
-          return await ApiClient.delete(endpoint);
-        default:
-          throw Exception('Unsupported HTTP method: $method');
-      }
-    } catch (e) {
-      print('Error in admin operation: $e');
-      return ApiResponse(success: false, message: e.toString());
-    }
   }
 }

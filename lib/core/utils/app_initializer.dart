@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/screens/admin_screen.dart';
+import 'package:service_hub/features/admin/admin_screen.dart';
 import '../network//network_helper.dart';
 import '../../screens/user_type_screen.dart';
 import '../../screens/welcome_screen.dart';
