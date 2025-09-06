@@ -83,7 +83,6 @@ class ServicesApiService {
     }
   }
 
-  /// جلب الخدمات حسب الفئة
   static Future<List<Service>> getServicesByCategory(String categoryId) async {
     try {
       return await getAllServices(categoryId: categoryId);
@@ -93,7 +92,6 @@ class ServicesApiService {
     }
   }
 
-  /// البحث في الخدمات
   static Future<List<Service>> searchServices(String searchTerm) async {
     try {
       return await getAllServices(search: searchTerm);

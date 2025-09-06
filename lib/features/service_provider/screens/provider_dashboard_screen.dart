@@ -201,8 +201,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                 onSelected: (value) {
                   if (value == 'logout') {
                     _handleLogout();
-                  } else if (value == 'delete') {
-                    _handleDeleteAccount();
                   }
                 },
                 itemBuilder: (context) => [
@@ -213,16 +211,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                         Icon(Icons.logout, color: Color(0xFF64748B)),
                         SizedBox(width: 12),
                         Text('تسجيل الخروج'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_forever, color: Colors.red),
-                        SizedBox(width: 12),
-                        Text('حذف الحساب', style: TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),
@@ -923,9 +911,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('حذف الحساب'),
+        title: const Text('حذف ملف مقدم الخدمة'),
         content: const Text(
-          'هل أنت متأكد من حذف الحساب نهائياً؟\n\nسيتم حذف جميع البيانات ولن تتمكن من استرجاعها.',
+          'هل أنت متأكد من حذف ملف مقدم الخدمة؟\n\nسيتم حذف جميع الخدمات والصور المرتبطة به، ولكن حسابك الشخصي سيبقى موجوداً.',
         ),
         actions: [
           TextButton(
@@ -935,10 +923,10 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.orange,
             ),
             child: const Text(
-              'حذف نهائياً',
+              'حذف الملف',
               style: TextStyle(color: Colors.white),
             ),
           ),
@@ -952,11 +940,17 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       });
 
       try {
-        final success = await _providerService.deleteProvider(_profile!.id.toString());
+        final response = await AuthService.deleteAccount();
 
-        if (success) {
-          await AuthService.logout();
+        if (response.success) {
           if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تم حذف ملف مقدم الخدمة بنجاح'),
+                backgroundColor: Colors.green,
+              ),
+            );
+
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const UserTypeScreen()),
@@ -967,7 +961,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('حدث خطأ أثناء حذف الحساب'),
+                content: Text('حدث خطأ أثناء حذف ملف مقدم الخدمة'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -977,7 +971,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('حدث خطأ أثناء حذف الحساب: $e'),
+              content: Text('حدث خطأ: $e'),
               backgroundColor: Colors.red,
             ),
           );
@@ -993,7 +987,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   }
 
   void _openWhatsApp() async {
-    const phoneNumber = '+970591234567';
+    const phoneNumber = '+972598434701';
     const message = 'مرحباً، أريد تفعيل حسابي كمقدم خدمة';
     final whatsappUrl = 'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}';
 

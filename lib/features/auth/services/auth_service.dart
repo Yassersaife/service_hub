@@ -67,7 +67,6 @@ class AuthService {
   static Future<ApiResponse> logout() async {
     final response = await ApiClient.post(ApiUrls.logout, {});
 
-    // امسح البيانات المحلية حتى لو فشل الطلب
     await NetworkHelper.clearAuthData();
     ApiClient.clearToken();
     _currentUser = null;
@@ -79,11 +78,20 @@ class AuthService {
     final response = await ApiClient.get(ApiUrls.getUser);
 
     if (response.success && response.data != null) {
-      // Laravel API يرجع data: { user: {...} }
       if (response.data['user'] != null) {
         _currentUser = response.data['user'];
         await NetworkHelper.saveUserData(response.data['user']);
       }
+    }
+
+    return response;
+  }
+
+  static Future<ApiResponse> deleteAccount() async {
+    final response = await ApiClient.delete(ApiUrls.deleteAccount);
+
+    if (response.success) {
+      await clearUserData();
     }
 
     return response;

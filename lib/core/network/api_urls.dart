@@ -8,6 +8,7 @@ class ApiUrls {
   static const String login = '/auth/login';
   static const String logout = '/auth/logout';
   static const String getUser = '/auth/user';
+  static const String deleteAccount = '/auth/account';
 
   // ====================
   // Categories URLs

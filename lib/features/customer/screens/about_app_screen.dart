@@ -104,7 +104,7 @@ class AboutAppScreen extends StatelessWidget {
             ),
             child: const Center(
               child: Text(
-                'PC',
+                'L',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -117,7 +117,7 @@ class AboutAppScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           const Text(
-            'ProConnect',
+            'Lumixy',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -274,7 +274,7 @@ class AboutAppScreen extends StatelessWidget {
           _buildContactItem(
             Icons.email,
             'البريد الإلكتروني',
-            'support@proconnect.app',
+            'harounarman77@gmail.com',
             AppColors.primary,
           ),
 
