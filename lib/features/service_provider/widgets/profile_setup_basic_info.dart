@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:service_hub/core/utils/app_colors.dart';
-import 'package:service_hub/core/network/api_client.dart';
-import 'package:service_hub/models/category.dart';
-import 'package:service_hub/models/service.dart';
-import 'package:service_hub/widgets/custom_dropdown.dart';
-import 'package:service_hub/widgets/custom_multiselect.dart';
-import 'package:service_hub/widgets/custom_text_field.dart';
-import 'package:service_hub/features/service_provider/models/profile_setup_data.dart';
+import 'package:Lumixy/core/utils/app_colors.dart';
+import 'package:Lumixy/core/network/api_client.dart';
+import 'package:Lumixy/models/category.dart';
+import 'package:Lumixy/models/service.dart';
+import 'package:Lumixy/widgets/custom_dropdown.dart';
+import 'package:Lumixy/widgets/custom_multiselect.dart';
+import 'package:Lumixy/widgets/custom_text_field.dart';
+import 'package:Lumixy/features/service_provider/models/profile_setup_data.dart';
 import 'profile_step_header.dart';
-import 'package:service_hub/services/services_api_service.dart';
+import 'package:Lumixy/services/services_api_service.dart';
 
 class ProfileSetupBasicInfo extends StatefulWidget {
   final ProfileSetupData data;

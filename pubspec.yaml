@@ -1,4 +1,4 @@
-name: service_hub
+name: Lumixy
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -27,6 +27,7 @@ dependencies:
   image_picker: ^1.1.2
   shared_preferences: ^2.5.3
   http: ^1.1.0
+  flutter_svg: ^2.0.9
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -35,6 +36,14 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  adaptive_icon_background: "#435fde"
+  image_path: "assets/images/icon.png"
+  remove_alpha_ios: true
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -56,6 +65,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/logo.png
 
   fonts:
    - family: Cairo

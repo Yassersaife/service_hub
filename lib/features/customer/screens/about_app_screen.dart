@@ -85,36 +85,28 @@ class AboutAppScreen extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 30),
-
-          // App logo and info
           Container(
-            width: 80,
-            height: 80,
+            width: 150,
+            height: 150,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: AppColors.primary.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
                 ),
               ],
             ),
-            child: const Center(
-              child: Text(
-                'L',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(25),
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.cover,
               ),
             ),
           ),
 
-          const SizedBox(height: 16),
 
           const Text(
             'Lumixy',
@@ -274,7 +266,7 @@ class AboutAppScreen extends StatelessWidget {
           _buildContactItem(
             Icons.email,
             'البريد الإلكتروني',
-            'harounarman77@gmail.com',
+            'lumixy03@gmail.com',
             AppColors.primary,
           ),
 

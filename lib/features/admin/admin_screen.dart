@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/features/admin/widgets/categories_tab.dart';
-import 'package:service_hub/features/admin/widgets/providers_tab.dart';
-import 'package:service_hub/features/admin/widgets/services_tab.dart';
-import 'package:service_hub/features/auth/services/auth_service.dart';
-import 'package:service_hub/screens/welcome_screen.dart';
+import 'package:Lumixy/features/admin/widgets/categories_tab.dart';
+import 'package:Lumixy/features/admin/widgets/providers_tab.dart';
+import 'package:Lumixy/features/admin/widgets/services_tab.dart';
+import 'package:Lumixy/features/auth/services/auth_service.dart';
+import 'package:Lumixy/screens/welcome_screen.dart';
 import '../../core/utils/app_colors.dart';
 
 class AdminScreen extends StatefulWidget {

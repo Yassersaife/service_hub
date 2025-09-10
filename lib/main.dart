@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:service_hub/core/utils/app_initializer.dart';
-import 'package:service_hub/features/auth/services/auth_service.dart';
+import 'package:Lumixy/core/utils/app_initializer.dart';
+import 'package:Lumixy/features/auth/services/auth_service.dart';
 import 'features/customer/screens/customer_bottom_navigation_screen.dart';
 import 'features/customer/screens/customer_services_screen.dart';
 

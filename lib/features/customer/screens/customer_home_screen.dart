@@ -2,10 +2,10 @@ import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:service_hub/models/category.dart' as app_models;
-import 'package:service_hub/features/customer/screens/all_providers_screen.dart';
-import 'package:service_hub/features/service_provider/models/provider_profile.dart';
-import 'package:service_hub/widgets/beautiful_provider_card.dart';
+import 'package:Lumixy/models/category.dart' as app_models;
+import 'package:Lumixy/features/customer/screens/all_providers_screen.dart';
+import 'package:Lumixy/features/service_provider/models/provider_profile.dart';
+import 'package:Lumixy/widgets/beautiful_provider_card.dart';
 import '../../service_provider/services/provider_service.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../services/services_api_service.dart';

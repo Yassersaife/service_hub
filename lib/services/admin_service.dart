@@ -1,6 +1,6 @@
 // lib/services/admin_service.dart - النسخة المحدثة
-import 'package:service_hub/core/network/api_client.dart';
-import 'package:service_hub/core/network/api_urls.dart';
+import 'package:Lumixy/core/network/api_client.dart';
+import 'package:Lumixy/core/network/api_urls.dart';
 
 class AdminService {
   static final AdminService _instance = AdminService._internal();

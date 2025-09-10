@@ -69,36 +69,29 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       position: _slideAnimation,
                       child: Column(
                         children: [
-                          // شعار التطبيق
                           Container(
-                            width: 120,
-                            height: 120,
+                            width: 200,
+                            height: 200,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(25),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
                                 ),
                               ],
                             ),
-                            child: const Center(
-                              child: Text(
-                                'PC',
-                                style: TextStyle(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(25),
+                              child: Image.asset(
+                                  'assets/images/logo.png',
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                            ),
                           ),
-
                           const SizedBox(height: 40),
 
-                          // عنوان التطبيق
                           const Text(
                             'أهلاً بك في',
                             style: TextStyle(
@@ -111,7 +104,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           const SizedBox(height: 8),
 
                           const Text(
-                            'ProConnect',
+                            'Lumixy',
                             style: TextStyle(
                               fontSize: 42,
                               color: Color(0xFFFEF08A),

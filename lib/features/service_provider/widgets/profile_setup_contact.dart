@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/widgets/custom_text_field.dart';
+import 'package:Lumixy/widgets/custom_text_field.dart';
 import '../models/profile_setup_data.dart';
 import 'profile_step_header.dart';
 

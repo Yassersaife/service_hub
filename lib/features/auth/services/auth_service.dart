@@ -64,6 +64,51 @@ class AuthService {
     return response;
   }
 
+  // ===== دوال نسيت كلمة السر =====
+
+  /// إرسال رابط إعادة تعيين كلمة المرور
+  static Future<ApiResponse> forgotPassword({
+    required String email,
+  }) async {
+    final response = await ApiClient.post(ApiUrls.forgotPassword, {
+      'email': email,
+    });
+
+    return response;
+  }
+
+  /// التحقق من صحة رمز إعادة التعيين
+  static Future<ApiResponse> verifyResetToken({
+    required String email,
+    required String token,
+  }) async {
+    final response = await ApiClient.post(ApiUrls.verifyResetToken, {
+      'email': email,
+      'otp': token,
+    });
+
+    return response;
+  }
+
+  /// إعادة تعيين كلمة المرور
+  static Future<ApiResponse> resetPassword({
+    required String email,
+    required String token,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final response = await ApiClient.post(ApiUrls.resetPassword, {
+      'email': email,
+      'otp': token,
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
+
+    return response;
+  }
+
+  // ===== باقي الدوال =====
+
   static Future<ApiResponse> logout() async {
     final response = await ApiClient.post(ApiUrls.logout, {});
 

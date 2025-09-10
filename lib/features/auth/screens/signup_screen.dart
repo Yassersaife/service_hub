@@ -1,6 +1,6 @@
 // lib/features/auth/screens/signup_screen.dart - Fixed
 import 'package:flutter/material.dart';
-import 'package:service_hub/features/service_provider/screens/provider_dashboard_screen.dart';
+import 'package:Lumixy/features/service_provider/screens/provider_dashboard_screen.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';
@@ -71,43 +71,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Widget _buildProviderHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: AppColors.secondaryGradient,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.secondary.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
+    return  Column(
         children: [
           Container(
-            width: 60,
-            height: 60,
+            width: 150,
+            height: 150,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
-            child: const Icon(
-              Icons.work,
-              color: Colors.white,
-              size: 30,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(25),
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-
-          const SizedBox(height: 16),
 
           const Text(
             'انضم كمقدم خدمة',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 25,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: AppColors.primary ,
             ),
           ),
 
@@ -117,13 +110,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
             'أنشئ حسابك وابدأ بعرض خدماتك للعملاء\nواربط معهم بسهولة',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white70,
+              color:  Colors.black,
               height: 1.4,
             ),
             textAlign: TextAlign.center,
           ),
         ],
-      ),
     );
   }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/core/utils/app_colors.dart';
+import 'package:Lumixy/core/utils/app_colors.dart';
 
 class ProfileProgressIndicator extends StatelessWidget {
   final int currentStep;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:service_hub/core/utils/app_colors.dart';
+import 'package:Lumixy/core/utils/app_colors.dart';
 import '../models/profile_setup_data.dart';
 import 'profile_step_header.dart';
 

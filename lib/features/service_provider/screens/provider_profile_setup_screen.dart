@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/core/utils/app_colors.dart';
-import 'package:service_hub/features/auth/services/auth_service.dart';
-import 'package:service_hub/features/service_provider/models/provider_profile.dart';
-import 'package:service_hub/features/service_provider/models/profile_setup_data.dart';
-import 'package:service_hub/features/service_provider/services/provider_service.dart';
-import 'package:service_hub/features/service_provider/widgets/profile_progress_indicator.dart';
-import 'package:service_hub/features/service_provider/widgets/profile_setup_basic_info.dart';
-import 'package:service_hub/features/service_provider/widgets/profile_setup_contact.dart';
-import 'package:service_hub/features/service_provider/widgets/profile_setup_portfolio.dart';
+import 'package:Lumixy/core/utils/app_colors.dart';
+import 'package:Lumixy/features/auth/services/auth_service.dart';
+import 'package:Lumixy/features/service_provider/models/provider_profile.dart';
+import 'package:Lumixy/features/service_provider/models/profile_setup_data.dart';
+import 'package:Lumixy/features/service_provider/services/provider_service.dart';
+import 'package:Lumixy/features/service_provider/widgets/profile_progress_indicator.dart';
+import 'package:Lumixy/features/service_provider/widgets/profile_setup_basic_info.dart';
+import 'package:Lumixy/features/service_provider/widgets/profile_setup_contact.dart';
+import 'package:Lumixy/features/service_provider/widgets/profile_setup_portfolio.dart';
 
 class ProviderProfileSetupScreen extends StatefulWidget {
   final ProviderProfile? existingProfile;

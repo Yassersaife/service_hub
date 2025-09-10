@@ -1,8 +1,8 @@
 // lib/screens/admin/tabs/providers_tab.dart
 import 'package:flutter/material.dart';
-import 'package:service_hub/features/service_provider/models/provider_profile.dart';
-import 'package:service_hub/features/service_provider/services/provider_service.dart';
-import 'package:service_hub/services/admin_service.dart';
+import 'package:Lumixy/features/service_provider/models/provider_profile.dart';
+import 'package:Lumixy/features/service_provider/services/provider_service.dart';
+import 'package:Lumixy/services/admin_service.dart';
 import '../../../core/utils/app_colors.dart';
 
 class ProvidersTab extends StatefulWidget {

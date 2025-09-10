@@ -1,12 +1,11 @@
 // lib/features/service_provider/screens/provider_dashboard_screen.dart - Fixed
 import 'package:flutter/material.dart';
-import 'package:service_hub/core/utils/app_colors.dart';
-import 'package:service_hub/features/auth/screens/login_screen.dart';
-import 'package:service_hub/features/auth/services/auth_service.dart';
-import 'package:service_hub/features/service_provider/models/provider_profile.dart';
-import 'package:service_hub/features/service_provider/services/provider_service.dart';
-import 'package:service_hub/screens/user_type_screen.dart';
-import 'package:service_hub/screens/welcome_screen.dart';
+import 'package:Lumixy/core/utils/app_colors.dart';
+import 'package:Lumixy/features/auth/services/auth_service.dart';
+import 'package:Lumixy/features/service_provider/models/provider_profile.dart';
+import 'package:Lumixy/features/service_provider/services/provider_service.dart';
+import 'package:Lumixy/screens/user_type_screen.dart';
+import 'package:Lumixy/screens/welcome_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'provider_profile_setup_screen.dart';
 
@@ -641,7 +640,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               width: double.infinity,
               height: 48,
               child: ElevatedButton.icon(
-                onPressed: _openWhatsApp,
+                onPressed: () => openWhatsApp(profile.displayName),
                 icon: const Icon(Icons.message, color: Colors.white, size: 20),
                 label: const Text(
                   'تواصل عبر واتساب',
@@ -986,14 +985,17 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     }
   }
 
-  void _openWhatsApp() async {
-    const phoneNumber = '+972598434701';
-    const message = 'مرحباً، أريد تفعيل حسابي كمقدم خدمة';
-    final whatsappUrl = 'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}';
+  void openWhatsApp(userName) async {
+    const phoneNumber = '972598434701';
+
+    final message = 'مرحباً، أنا $userName وأريد تفعيل حسابي كمقدم خدمة';
+
+    final whatsappUrl =
+        'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}';
 
     try {
       if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
-        await launchUrl(Uri.parse(whatsappUrl));
+        await launchUrl(Uri.parse(whatsappUrl), mode: LaunchMode.externalApplication);
       } else {
         _showErrorDialog('لا يمكن فتح واتساب. تأكد من تثبيت التطبيق.');
       }

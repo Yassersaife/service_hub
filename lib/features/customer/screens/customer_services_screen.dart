@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/features/service_provider/models/provider_profile.dart';
-import 'package:service_hub/models/category.dart';
-import 'package:service_hub/models/service.dart';
-import 'package:service_hub/services/services_api_service.dart';
+import 'package:Lumixy/features/service_provider/models/provider_profile.dart';
+import 'package:Lumixy/models/category.dart';
+import 'package:Lumixy/models/service.dart';
+import 'package:Lumixy/services/services_api_service.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../service_provider/services/provider_service.dart';
 import '../../../widgets/service_provider_card_guest.dart';

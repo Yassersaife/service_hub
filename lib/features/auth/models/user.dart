@@ -1,4 +1,4 @@
-import 'package:service_hub/features/service_provider/models/provider_profile.dart';
+import 'package:Lumixy/features/service_provider/models/provider_profile.dart';
 
 class User {
   final int id;

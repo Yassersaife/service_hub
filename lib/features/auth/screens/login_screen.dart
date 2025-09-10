@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/features/admin/admin_screen.dart';
+import 'package:Lumixy/features/admin/admin_screen.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../widgets/custom_text_field.dart';
 import '../services/auth_service.dart';
 import 'signup_screen.dart';
+import 'forgot_password_screen.dart';
 import '../../service_provider/screens/provider_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -72,39 +73,35 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       children: [
         Container(
-          width: 80,
-          height: 80,
+          width: 200,
+          height: 200,
           decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.05),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          child: const Center(
-            child: Icon(
-              Icons.work,
-              color: Colors.white,
-              size: 40,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(25),
+            child: Image.asset(
+              'assets/images/logo.png',
+              fit: BoxFit.cover,
             ),
           ),
         ),
 
-        const SizedBox(height: 20),
-
-        const Text(
-          'Pro Connect',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
-          ),
-        ),
-
-        const SizedBox(height: 8),
+        const SizedBox(height: 24),
 
         const Text(
           'سجل دخولك لإدارة خدماتك',
           style: TextStyle(
-            fontSize: 16,
-            color: Color(0xFF64748B),
+            fontSize: 25,
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
@@ -159,7 +156,31 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 16),
+
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ForgotPasswordScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'نسيت كلمة المرور؟',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
 
             SizedBox(
               width: double.infinity,
@@ -277,7 +298,7 @@ class _LoginScreenState extends State<LoginScreen> {
           await Future.delayed(const Duration(milliseconds: 500));
 
           if (mounted) {
-            if(AuthService.userType == 'admin') {
+            if (AuthService.userType == 'admin') {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
@@ -286,20 +307,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     (route) => false,
               );
             } else {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProviderDashboardScreen(),
-                  ),
-                      (route) => false,
-                );
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProviderDashboardScreen(),
+                ),
+                    (route) => false,
+              );
             }
           }
         } else {
-          // إظهار رسالة خطأ
+          // إظهار رسالة خطأ عند فشل تسجيل الدخول
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result.message),
+              content: Text(result.message ?? 'فشل في تسجيل الدخول'),
               backgroundColor: Colors.red,
             ),
           );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/features/service_provider/models/provider_profile.dart';
+import 'package:Lumixy/features/service_provider/models/provider_profile.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/utils/app_colors.dart';
 

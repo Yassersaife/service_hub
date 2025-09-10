@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:service_hub/core/network/api_client.dart';
-import 'package:service_hub/core/network/api_urls.dart';
+import 'package:Lumixy/core/network/api_client.dart';
+import 'package:Lumixy/core/network/api_urls.dart';
 import '../models/provider_profile.dart';
-import 'package:service_hub/features/auth/services/auth_service.dart';
+import 'package:Lumixy/features/auth/services/auth_service.dart';
 
 class ProviderService {
   static final ProviderService _instance = ProviderService._internal();

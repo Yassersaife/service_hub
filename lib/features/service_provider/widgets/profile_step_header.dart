@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:service_hub/core/utils/app_colors.dart';
+import 'package:Lumixy/core/utils/app_colors.dart';
 
 class ProfileStepHeader extends StatelessWidget {
   final String title;

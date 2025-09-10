@@ -9,7 +9,9 @@ class ApiUrls {
   static const String logout = '/auth/logout';
   static const String getUser = '/auth/user';
   static const String deleteAccount = '/auth/account';
-
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String verifyResetToken = '/auth/verify-reset-token';
+  static const String resetPassword = '/auth/reset-password';
   // ====================
   // Categories URLs
   // ====================
