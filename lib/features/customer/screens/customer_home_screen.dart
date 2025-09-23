@@ -271,7 +271,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           child: Text(
             'الخدمات المتاحة',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1E293B),
             ),
@@ -401,7 +401,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               const Text(
                 'مزودو الخدمات المميزون',
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1E293B),
                 ),

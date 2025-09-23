@@ -22,15 +22,22 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   bool _isLoading = true;
   bool _isDeletingAccount = false;
   String? _errorMessage;
+  String? phoneNumber;
 
   @override
   void initState() {
     super.initState();
+    _loadPhone();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadProfile();
     });
   }
-
+  void _loadPhone() async {
+    final phone = await AuthService.getWhatsapp();
+    setState(() {
+      phoneNumber = phone ?? 'غير متوفر';
+    });
+  }
   Future<void> _loadProfile() async {
     if (!mounted) return;
 
@@ -986,7 +993,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   }
 
   void openWhatsApp(userName) async {
-    const phoneNumber = '972598434701';
 
     final message = 'مرحباً، أنا $userName وأريد تفعيل حسابي كمقدم خدمة';
 

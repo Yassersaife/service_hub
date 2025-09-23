@@ -30,6 +30,10 @@ class ApiUrls {
   static const String searchProviders = '/providers/search';
 
   // ====================
+  // Settings URLs
+  // ====================
+  static const String settings = '/settings';
+  // ====================
   // Helper Methods
   // ====================
 

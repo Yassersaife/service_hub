@@ -21,18 +21,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
 
-    // طباعة معلومات للتشخيص
-    print('=== تشخيص بيانات المزود ===');
-    print('Provider Name: ${widget.provider.displayName}');
-    print('Services Count: ${widget.provider.servicesCount}');
-    print('Has Services: ${widget.provider.hasServices}');
-    print('Services Data: ${widget.provider.services}');
-    print('Category Name: ${widget.provider.categoryName}');
-    print('Description: ${widget.provider.description}');
-    print('Profile Image URL: ${widget.provider.profileImageUrl}');
-    print('Portfolio Images: ${widget.provider.allPortfolioImages}');
-    print('Social Media: ${widget.provider.socialMedia}');
-    print('============================');
   }
 
   @override
@@ -52,7 +40,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             floating: false,
             pinned: true,
             elevation: 0,
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.primary,
             iconTheme: const IconThemeData(
               color: Colors.white,
             ),
@@ -149,7 +137,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
 
                           const SizedBox(height: 8),
 
-                          // نوع الخدمة
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -283,7 +270,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   Widget _buildProfileImage() {
-    // التحقق من profileImageUrl أولاً ثم profileImage
     String? imageUrl;
     if (widget.provider.profileImageUrl != null && widget.provider.profileImageUrl!.isNotEmpty) {
       imageUrl = widget.provider.profileImageUrl;
@@ -640,6 +626,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   Widget _buildPortfolioTab() {
     final portfolioImages = widget.provider.allPortfolioImages;
     print('Building portfolio tab with ${portfolioImages.length} images');
+    print("Portfolio Images: $portfolioImages");
 
     if (portfolioImages.isEmpty) {
       return Center(

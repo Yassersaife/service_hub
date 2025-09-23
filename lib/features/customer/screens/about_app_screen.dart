@@ -1,9 +1,30 @@
+import 'package:Lumixy/features/auth/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../screens/user_type_screen.dart';
 
-class AboutAppScreen extends StatelessWidget {
+class AboutAppScreen extends StatefulWidget {
   const AboutAppScreen({super.key});
+
+  @override
+  State<AboutAppScreen> createState() => _AboutAppScreenState();
+}
+
+class _AboutAppScreenState extends State<AboutAppScreen> {
+  String? phoneNumber;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPhone();
+  }
+
+  void _loadPhone() async {
+    final phone = await AuthService.getAppPhone();
+    setState(() {
+      phoneNumber = phone ?? 'غير متوفر';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +296,7 @@ class AboutAppScreen extends StatelessWidget {
           _buildContactItem(
             Icons.phone,
             'رقم الهاتف',
-            '0568972337',
+            phoneNumber ?? 'غير متوافر',
             AppColors.secondary,
           ),
         ],
@@ -323,7 +344,7 @@ class AboutAppScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           const Text(
-            'ProConnect هو تطبيق يهدف إلى ربط مقدمي الخدمات مع العملاء بطريقة سهلة وآمنة. يمكن للعملاء البحث عن الخدمات التي يحتاجونها والتواصل مع مقدمي الخدمات مباشرة، بينما يمكن لمقدمي الخدمات عرض خدماتهم والوصول إلى عملاء جدد.',
+            ' هو تطبيق يهدف إلى ربط مقدمي الخدمات مع العملاء بطريقة سهلة وآمنة. يمكن للعملاء البحث عن الخدمات التي يحتاجونها والتواصل مع مقدمي الخدمات مباشرة، بينما يمكن لمقدمي الخدمات عرض خدماتهم والوصول إلى عملاء جدد.',
             style: TextStyle(
               fontSize: 14,
               color: Color(0xFF64748B),

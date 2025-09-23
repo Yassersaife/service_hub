@@ -146,7 +146,6 @@ class _AllProvidersScreenState extends State<AllProvidersScreen> {
         ),
         child: Column(
           children: [
-            // صورة البروفايل
             Padding(
               padding: const EdgeInsets.all(12),
               child: Container(
@@ -167,7 +166,7 @@ class _AllProvidersScreenState extends State<AllProvidersScreen> {
                     ? ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
-                    provider.profileImage!,
+                    provider.profileImageUrl!,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) =>
                         Icon(
@@ -185,14 +184,13 @@ class _AllProvidersScreenState extends State<AllProvidersScreen> {
               ),
             ),
 
-            // المعلومات
+            //
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // الاسم
                     Text(
                       provider.user?['name'] ?? 'مقدم الخدمة',
                       style: const TextStyle(

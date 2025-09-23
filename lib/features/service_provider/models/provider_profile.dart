@@ -319,9 +319,6 @@ class ProviderProfile {
     if (portfolioImagesUrls != null && portfolioImagesUrls!.isNotEmpty) {
       allImages.addAll(portfolioImagesUrls!);
     }
-    if (portfolioImages != null && portfolioImages!.isNotEmpty) {
-      allImages.addAll(portfolioImages!);
-    }
     return allImages;
   }
 

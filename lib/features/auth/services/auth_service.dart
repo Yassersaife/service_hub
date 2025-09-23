@@ -234,4 +234,34 @@ class AuthService {
     ApiClient.clearToken();
     _currentUser = null;
   }
+  static Future<String?> getAppPhone() async {
+    final response = await ApiClient.get(ApiUrls.settings);
+
+    if (response.success && response.data != null) {
+      final dataList = response.data as List<dynamic>;
+      final appPhoneItem = dataList.firstWhere(
+            (item) => item['key'] == 'app_phone',
+        orElse: () => null,
+      );
+      return appPhoneItem != null ? appPhoneItem['value'] as String? : null;
+    }
+
+    return null;
+  }
+
+  static Future<String?> getWhatsapp() async {
+    final response = await ApiClient.get(ApiUrls.settings);
+
+    if (response.success && response.data != null) {
+      final dataList = response.data as List<dynamic>;
+      final whatsappItem = dataList.firstWhere(
+            (item) => item['key'] == 'whatsapp',
+        orElse: () => null,
+      );
+      return whatsappItem != null ? whatsappItem['value'] as String? : null;
+    }
+
+    return null;
+  }
+
 }

@@ -1,4 +1,4 @@
-package com.example.service_hub
+package com.lumixy.service_hub
 
 import io.flutter.embedding.android.FlutterActivity
 
