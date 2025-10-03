@@ -148,7 +148,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
             const SizedBox(height: 20),
 
-            // البريد الإلكتروني
             CustomTextField(
               label: 'البريد الإلكتروني',
               hint: 'ادخل بريدك الاكتروني',
@@ -160,19 +159,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
             const SizedBox(height: 20),
 
-            // رقم الهاتف
             CustomTextField(
               label: 'رقم الهاتف',
               hint: '05xxxxxxxx',
               icon: Icons.phone,
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              required: true,
+              required: false,
             ),
 
             const SizedBox(height: 20),
 
-            // كلمة المرور
             CustomTextField(
               label: 'كلمة المرور',
               hint: 'أدخل كلمة مرور قوية',
@@ -192,7 +189,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
             const SizedBox(height: 20),
 
-            // تأكيد كلمة المرور
             CustomTextField(
               label: 'تأكيد كلمة المرور',
               hint: 'أعد إدخال كلمة المرور',

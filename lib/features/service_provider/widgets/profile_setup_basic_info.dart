@@ -164,7 +164,7 @@ class _ProfileSetupBasicInfoState extends State<ProfileSetupBasicInfo> {
             hint: 'اكتب وصفاً مفصلاً عن خدمتك وخبرتك...',
             controller: _descriptionController,
             maxLines: 4,
-            required: true,
+            required: false,
             onChanged: (value) {
               widget.data.description = value;
               widget.onDataChanged();

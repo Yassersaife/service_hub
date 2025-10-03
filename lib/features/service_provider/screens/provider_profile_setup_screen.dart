@@ -204,8 +204,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
   void _nextStep() {
     if (_currentStep == 0) {
       if (_data.selectedCategoryId == null ||
-          _data.selectedCity == null ||
-          _data.description.isEmpty) {
+          _data.selectedCity == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('يرجى ملء جميع الحقول المطلوبة'),
@@ -271,7 +270,7 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
         isComplete: true,
         createdAt: widget.existingProfile?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
-        services: servicesData, // إضافة بيانات الخدمات
+        services: servicesData,
       );
 
       final success = await _providerService.saveProfile(profile);
