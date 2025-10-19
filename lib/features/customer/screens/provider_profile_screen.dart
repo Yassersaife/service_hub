@@ -381,7 +381,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // الوصف
           if (widget.provider.description != null && widget.provider.description!.isNotEmpty) ...[
             _buildSectionCard(
               'نبذة عن الخدمة',
@@ -496,7 +495,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             ),
             const SizedBox(height: 20),
           ] else ...[
-            // عرض رسالة عدم وجود خدمات مع التخصص الرئيسي
             _buildSectionCard(
               'الخدمات والتخصصات',
               Icons.info_outline,
@@ -1080,64 +1078,54 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   }
 
   void _showImageDialog(String imageUrl, int index) {
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Stack(
-          children: [
-            Center(
-              child: Hero(
-                tag: 'portfolio_$index',
-                child: Container(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.9,
-                    maxHeight: MediaQuery.of(context).size.height * 0.8,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      imageUrl,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 200,
-                          height: 200,
-                          color: Colors.grey.shade800,
-                          child: const Center(
-                            child: Text(
-                              'فشل تحميل الصورة',
-                              style: TextStyle(color: Colors.white),
+      barrierDismissible: true,
+      barrierLabel: 'Close',
+      barrierColor: Colors.black.withOpacity(0.9),
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Stack(
+              children: [
+                Center(
+                  child: Hero(
+                    tag: 'portfolio_$index',
+                    child: InteractiveViewer(
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey.shade800,
+                            child: const Center(
+                              child: Text(
+                                'فشل تحميل الصورة',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-            Positioned(
-              top: 40,
-              right: 20,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 30,
+                Positioned(
+                  top: 50,
+                  right: 20,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
