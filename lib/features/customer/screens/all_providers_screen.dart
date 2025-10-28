@@ -6,8 +6,10 @@ import '../../../core/utils/app_colors.dart';
 import 'provider_profile_screen.dart';
 
 class AllProvidersScreen extends StatefulWidget {
+  final bool featured;
   const AllProvidersScreen({
     super.key,
+    this.featured = false,
   });
 
   @override
@@ -28,8 +30,7 @@ class _AllProvidersScreenState extends State<AllProvidersScreen> {
   Future<void> _loadProviders() async {
     try {
       List<ProviderProfile> providers;
-      providers = await _providerService.getAllProviders();
-
+      providers = widget.featured ? await _providerService.getFeaturedProviders() : await _providerService.getAllProviders();
       setState(() {
         _providers = providers;
         _isLoading = false;
@@ -48,8 +49,8 @@ class _AllProvidersScreenState extends State<AllProvidersScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          "مقدمي الخدمات",
+        title:  Text(
+          widget.featured ? "مقدمي الخدمات المميزين" : "كل مقدمي الخدمات",
           style: TextStyle(
             color: Color(0xFF1E293B),
             fontWeight: FontWeight.bold,
@@ -102,11 +103,12 @@ class _AllProvidersScreenState extends State<AllProvidersScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'لا يوجد مقدمو خدمات',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade600,
+            widget.featured
+                ? 'لا يوجد مقدمو خدمات مميزون حالياً'
+                : 'لا يوجد مقدمو خدمات حالياً',
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
             ),
           ),
           const SizedBox(height: 8),

@@ -133,12 +133,11 @@ class ProviderService {
         if (profile.description != null) 'description': profile.description!,
         if (profile.workHours != null) 'work_hours': profile.workHours!,
         if (profile.whatsappNumber != null) 'whatsapp_number': profile.whatsappNumber!,
-        '_method': 'PUT', // Laravel method spoofing
+        '_method': 'PUT',
       };
 
-      // إضافة social_media كـ JSON string محسّن
+      // ✅ Social Media - كـ JSON string
       if (profile.socialMedia != null && profile.socialMedia!.isNotEmpty) {
-        // إزالة القيم الفارغة
         final cleanedSocialMedia = <String, dynamic>{};
         profile.socialMedia!.forEach((key, value) {
           if (value != null && value.toString().trim().isNotEmpty) {
@@ -148,17 +147,22 @@ class ProviderService {
 
         if (cleanedSocialMedia.isNotEmpty) {
           fields['social_media'] = jsonEncode(cleanedSocialMedia);
+          print('Social Media: ${fields['social_media']}');
         }
       }
 
-      // إضافة service_ids كـ array منفصل
+      // ✅ Services - كـ JSON string
       if (profile.services != null && profile.services!.isNotEmpty) {
-        for (int i = 0; i < profile.services!.length; i++) {
-          fields['service_ids[$i]'] = profile.services![i]['id'].toString();
-        }
+        final serviceIds = profile.services!.map((s) => s['id']).toList();
+        fields['service_ids'] = jsonEncode(serviceIds);
+        print('Service IDs: ${fields['service_ids']}');
+      } else {
+        // إرسال array فارغ لحذف جميع الخدمات
+        fields['service_ids'] = jsonEncode([]);
+        print('حذف جميع الخدمات');
       }
 
-      // تحضير الملفات الجديدة فقط
+      // ✅ Profile Image
       final files = <String, File>{};
       if (profile.profileImage != null &&
           !profile.profileImage!.startsWith('http') &&
@@ -166,32 +170,69 @@ class ProviderService {
         final imageFile = File(profile.profileImage!);
         if (await imageFile.exists()) {
           files['profile_image'] = imageFile;
-          print('تحديث صورة البروفايل: ${profile.profileImage}');
+          print('تحديث صورة البروفايل');
         }
       }
 
-      // تحضير صور المعرض الجديدة - إصلاح مشكلة التحديث
+      // ✅ Portfolio Images - الطريقة الجديدة (JSON Paths)
       final fileArrays = <String, List<File>>{};
+      final keepImages = <String>[];
+      final newImages = <File>[];
+
       if (profile.portfolioImages != null && profile.portfolioImages!.isNotEmpty) {
-        final newPortfolioFiles = <File>[];
+        print('--- معالجة صور المعرض ---');
 
         for (String imagePath in profile.portfolioImages!) {
-          // رفع الصور الجديدة فقط
-          if (!imagePath.startsWith('http') && !imagePath.startsWith('storage/')) {
+          if (imagePath.startsWith('http://') ||
+              imagePath.startsWith('https://') ||
+              imagePath.startsWith('storage/')) {
+            // ✅ صورة قديمة من السيرفر
+            String cleanPath = imagePath;
+
+            // استخراج الـ path النظيف (storage/...)
+            if (imagePath.contains('storage/')) {
+              final storageIndex = imagePath.indexOf('storage/');
+              cleanPath = imagePath.substring(storageIndex);
+            }
+
+            keepImages.add(cleanPath);
+            print('صورة قديمة محفوظة: $cleanPath');
+
+          } else {
+            // ✅ صورة جديدة من الجهاز
             final imageFile = File(imagePath);
             if (await imageFile.exists()) {
-              newPortfolioFiles.add(imageFile);
-              print('صورة معرض جديدة: $imagePath');
+              newImages.add(imageFile);
+              print('صورة جديدة: $imagePath');
+            } else {
+              print('⚠️ ملف غير موجود: $imagePath');
             }
           }
         }
 
-        if (newPortfolioFiles.isNotEmpty) {
-          fileArrays['portfolio_images[]'] = newPortfolioFiles;
-          print('عدد صور المعرض الجديدة: ${newPortfolioFiles.length}');
+        // إرسال الصور القديمة كـ JSON
+        fields['keep_portfolio_images'] = jsonEncode(keepImages);
+        print('✓ الصور القديمة المحفوظة: ${keepImages.length}');
+        print('  Paths: $keepImages');
+
+        // إرسال الصور الجديدة كـ files
+        if (newImages.isNotEmpty) {
+          fileArrays['portfolio_images[]'] = newImages;
+          print('✓ الصور الجديدة للرفع: ${newImages.length}');
         }
+
+        print('📊 إجمالي الصور: ${keepImages.length + newImages.length}');
+
+      } else {
+        // لا توجد صور - حذف جميع الصور
+        fields['keep_portfolio_images'] = jsonEncode([]);
+        print('⚠️ حذف جميع صور المعرض');
       }
 
+      print('\n=== إرسال الطلب ===');
+      print('Fields: ${fields.keys.toList()}');
+      print('Files: ${files.keys.toList()}');
+      print('File Arrays: ${fileArrays.keys.toList()}');
 
       final response = await ApiClient.postMultipart(
         endpoint: ApiUrls.providerById(profile.id.toString()),
@@ -200,21 +241,24 @@ class ProviderService {
         fileArrays: fileArrays,
       );
 
-      print('نتيجة التحديث: ${response.success}');
+      print('\n=== النتيجة ===');
+      print('Success: ${response.success}');
+
       if (!response.success) {
-        print('خطأ في التحديث: ${response.message}');
+        print('❌ خطأ: ${response.message}');
         print('Response Data: ${response.data}');
       } else {
-        print('تم تحديث الملف الشخصي بنجاح');
+        print('✅ تم تحديث الملف الشخصي بنجاح');
       }
 
       return response.success;
+
     } catch (e) {
-      print('خطأ في updateProfile: $e');
+      print('\n❌ خطأ في updateProfile: $e');
+      print('Stack trace: ${StackTrace.current}');
       return false;
     }
   }
-
   // ====================
   // Get Profile Methods - محسّن
   // ====================

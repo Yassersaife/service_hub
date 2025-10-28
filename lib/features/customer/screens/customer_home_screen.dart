@@ -242,20 +242,31 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           Positioned(
             bottom: 20,
             left: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'اطلب الآن',
-                style: TextStyle(
-                  color: Color(0xFFFF6B6B),
-                  fontWeight: FontWeight.bold,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AllProvidersScreen(featured: false),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
                 ),
+                child: const Text(
+                  'اطلب الآن',
+                  style: TextStyle(
+                    color: Color(0xFFFF6B6B),
+                    fontWeight: FontWeight.bold,
+                  ),
               ),
             ),
+           ),
           ),
         ],
       ),
@@ -411,7 +422,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const AllProvidersScreen(),
+                      builder: (context) => const AllProvidersScreen(featured: true),
                     ),
                   );
                 },

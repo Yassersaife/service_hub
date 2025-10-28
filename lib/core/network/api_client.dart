@@ -4,7 +4,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  static const String baseUrl = 'http://84.247.165.213/api';
+  // static const String baseUrl = 'http://84.247.165.213/api';
+  static const String baseUrl = 'http://127.0.0.1:8000/api';
 
   static String? _token;
 
