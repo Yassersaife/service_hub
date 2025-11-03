@@ -12,7 +12,7 @@ class AuthService {
     required String email,
     required String password,
     required String phone,
-    required String userType, // 'customer' أو 'provider'
+    required String userType,
   }) async {
     final response = await ApiClient.post(ApiUrls.register, {
       'name': name,
@@ -29,7 +29,6 @@ class AuthService {
         ApiClient.setToken(token);
       }
 
-      // احفظ بيانات المستخدم
       if (response.data['user'] != null) {
         _currentUser = response.data['user'];
         await NetworkHelper.saveUserData(response.data['user']);
@@ -64,9 +63,6 @@ class AuthService {
     return response;
   }
 
-  // ===== دوال نسيت كلمة السر =====
-
-  /// إرسال رابط إعادة تعيين كلمة المرور
   static Future<ApiResponse> forgotPassword({
     required String email,
   }) async {
@@ -77,7 +73,6 @@ class AuthService {
     return response;
   }
 
-  /// التحقق من صحة رمز إعادة التعيين
   static Future<ApiResponse> verifyResetToken({
     required String email,
     required String token,
@@ -90,7 +85,6 @@ class AuthService {
     return response;
   }
 
-  /// إعادة تعيين كلمة المرور
   static Future<ApiResponse> resetPassword({
     required String email,
     required String token,
@@ -106,8 +100,6 @@ class AuthService {
 
     return response;
   }
-
-  // ===== باقي الدوال =====
 
   static Future<ApiResponse> logout() async {
     final response = await ApiClient.post(ApiUrls.logout, {});
@@ -147,12 +139,10 @@ class AuthService {
     if (token != null) {
       ApiClient.setToken(token);
 
-      // تحميل بيانات المستخدم إذا لم تكن محملة
       if (_currentUser == null) {
         _currentUser = await NetworkHelper.getUserData();
       }
 
-      // التحقق من صحة التوكن
       if (_currentUser == null) {
         final userResponse = await getUser();
         return userResponse.success;
@@ -171,39 +161,24 @@ class AuthService {
     }
   }
 
-  // Helper getters
-  static String? get userName {
-    return _currentUser?['name'];
-  }
+  static String? get userName => _currentUser?['name'];
 
-  static String? get userEmail {
-    return _currentUser?['email'];
-  }
+  static String? get userEmail => _currentUser?['email'];
 
-  static String? get userPhone {
-    return _currentUser?['phone'];
-  }
+  static String? get userPhone => _currentUser?['phone'];
 
-  static String? get userType {
-    return _currentUser?['user_type'];
-  }
+  static String? get userType => _currentUser?['user_type'];
 
   static int? get userId {
     final id = _currentUser?['id'];
     return id is int ? id : (id != null ? int.tryParse(id.toString()) : null);
   }
 
-  static bool get isProvider {
-    return userType == 'provider';
-  }
+  static bool get isProvider => userType == 'provider';
 
-  static bool get isCustomer {
-    return userType == 'customer';
-  }
+  static bool get isCustomer => userType == 'customer';
 
-  static bool get isEmailVerified {
-    return _currentUser?['email_verified_at'] != null;
-  }
+  static bool get isEmailVerified => _currentUser?['email_verified_at'] != null;
 
   static DateTime? get emailVerifiedAt {
     final dateStr = _currentUser?['email_verified_at'];
@@ -215,15 +190,10 @@ class AuthService {
     return dateStr != null ? DateTime.tryParse(dateStr) : null;
   }
 
-  static Map<String, dynamic>? get providerProfile {
-    return _currentUser?['provider_profile'];
-  }
+  static Map<String, dynamic>? get providerProfile => _currentUser?['provider_profile'];
 
-  static bool get hasProviderProfile {
-    return providerProfile != null;
-  }
+  static bool get hasProviderProfile => providerProfile != null;
 
-  // Helper methods
   static Future<void> updateUserData(Map<String, dynamic> userData) async {
     _currentUser = userData;
     await NetworkHelper.saveUserData(userData);
@@ -234,6 +204,7 @@ class AuthService {
     ApiClient.clearToken();
     _currentUser = null;
   }
+
   static Future<String?> getAppPhone() async {
     final response = await ApiClient.get(ApiUrls.settings);
 
@@ -263,5 +234,4 @@ class AuthService {
 
     return null;
   }
-
 }

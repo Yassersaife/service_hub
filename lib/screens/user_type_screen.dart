@@ -58,7 +58,6 @@ class _UserTypeScreenState extends State<UserTypeScreen>
           padding: const EdgeInsets.all(24.0),
           child: Column(
             children: [
-              // العنوان
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: const Column(
@@ -87,14 +86,12 @@ class _UserTypeScreenState extends State<UserTypeScreen>
 
               const Spacer(),
 
-              // خيارات الحساب
               SlideTransition(
                 position: _slideAnimation,
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: Column(
                     children: [
-                      // أبحث عن خدمات (بدون تسجيل)
                       _buildUserTypeCard(
                         title: 'أبحث عن خدمات',
                         subtitle: 'تصفح واعثر على مقدمي الخدمات',
@@ -112,7 +109,6 @@ class _UserTypeScreenState extends State<UserTypeScreen>
 
                       const SizedBox(height: 20),
 
-                      // مقدم خدمات (يحتاج تسجيل)
                       _buildUserTypeCard(
                         title: 'أريد تقديم خدماتي',
                         subtitle: 'أنشئ حساباً واعرض خدماتك\nواربط مع العملاء',

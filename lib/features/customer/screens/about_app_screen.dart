@@ -1,7 +1,11 @@
+import 'package:Lumixy/core/utils/app_initializer.dart';
 import 'package:Lumixy/features/auth/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../screens/user_type_screen.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 
 class AboutAppScreen extends StatefulWidget {
   const AboutAppScreen({super.key});
@@ -84,13 +88,6 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
           // App Bar
           Row(
             children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                ),
-              ),
               const Expanded(
                 child: Text(
                   'حول التطبيق',
@@ -172,11 +169,12 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
-                builder: (context) => const UserTypeScreen(),
+                builder: (context) => const AppInitializer(),
               ),
+                  (route) => false,
             );
           },
           borderRadius: BorderRadius.circular(20),
@@ -289,6 +287,7 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
             'البريد الإلكتروني',
             'lumixy03@gmail.com',
             AppColors.primary,
+            url: 'mailto:lumixy03@gmail.com',
           ),
 
           const SizedBox(height: 12),
@@ -298,6 +297,17 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
             'رقم الهاتف',
             phoneNumber ?? 'غير متوافر',
             AppColors.secondary,
+            url: phoneNumber != null ? 'tel:$phoneNumber' : null,
+          ),
+
+          const SizedBox(height: 12),
+
+          _buildContactItem(
+            Icons.camera_alt,
+            'إنستغرام',
+            '@lumixy.app',
+            const Color(0xFFE1306C),
+            url: 'https://www.instagram.com/lumixy.app/',
           ),
         ],
       ),
@@ -395,46 +405,65 @@ class _AboutAppScreenState extends State<AboutAppScreen> {
     );
   }
 
-  Widget _buildContactItem(IconData icon, String label, String value, Color color) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 18,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF64748B),
-                  fontWeight: FontWeight.w500,
-                ),
+  Widget _buildContactItem(IconData icon, String label, String value, Color color, {String? url}) {
+    return InkWell(
+      onTap: url != null ? () => _launchUrl(url) : null,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 18,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (url != null)
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: color.withOpacity(0.5),
+              ),
+          ],
         ),
-      ],
+      ),
     );
   }
-}
+
+  Future<void> _launchUrl(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      print('لا يمكن فتح الرابط: $urlString');
+    }
+  }}

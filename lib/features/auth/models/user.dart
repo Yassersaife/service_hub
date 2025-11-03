@@ -1,3 +1,5 @@
+// lib/models/user.dart
+
 import 'package:Lumixy/features/service_provider/models/provider_profile.dart';
 
 class User {
@@ -51,6 +53,8 @@ class User {
   bool get isEmailVerified => emailVerifiedAt != null;
   bool get isProvider => userType == 'provider';
   bool get isCustomer => userType == 'customer';
+  bool get hasProviderProfile => providerProfile != null;
+  bool get hasCompleteProfile => providerProfile?.isComplete ?? false;
 
   Map<String, dynamic> toJson() {
     return {
@@ -62,25 +66,96 @@ class User {
       'email_verified_at': emailVerifiedAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
-      'provider_profile': providerProfile?.toJson(),
+      // ✅ التعديل - تحقق من وجود providerProfile قبل استدعاء toJson
+      if (providerProfile != null)
+        'provider_profile': _providerProfileToJson(providerProfile!),
+    };
+  }
+
+  // ✅ Helper method لتحويل ProviderProfile إلى JSON
+  Map<String, dynamic> _providerProfileToJson(ProviderProfile profile) {
+    return {
+      'id': profile.id,
+      'user_id': profile.userId,
+      'category_id': profile.categoryId,
+      'address': profile.address,
+      'city': profile.city,
+      'description': profile.description,
+      'profile_image': profile.profileImage,
+      'work_hours': profile.workHours,
+      'whatsapp_number': profile.whatsappNumber,
+      'is_verified': profile.isVerified,
+      'is_featured': profile.isFeatured,
+      'is_complete': profile.isComplete,
+      'social_media': profile.socialMedia,
+      'created_at': profile.createdAt.toIso8601String(),
+      'updated_at': profile.updatedAt.toIso8601String(),
     };
   }
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      phone: json['phone'] ?? '',
-      userType: json['user_type'] ?? 'customer',
-      emailVerifiedAt: json['email_verified_at'] != null
-          ? DateTime.parse(json['email_verified_at'])
-          : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-      providerProfile: json['provider_profile'] != null
-          ? ProviderProfile.fromJson(json['provider_profile'])
-          : null,
-    );
+    try {
+      return User(
+        id: _parseInt(json['id']),
+        name: json['name']?.toString() ?? '',
+        email: json['email']?.toString() ?? '',
+        phone: json['phone']?.toString() ?? '',
+        userType: json['user_type']?.toString() ?? 'customer',
+        emailVerifiedAt: _parseDateTime(json['email_verified_at']),
+        createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
+        updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
+        providerProfile: _parseProviderProfile(json['provider_profile']),
+      );
+    } catch (e, stackTrace) {
+      print('Error parsing User from JSON: $e');
+      print('Stack trace: $stackTrace');
+      print('JSON data: $json');
+      rethrow;
+    }
   }
+
+  // ✅ Helper methods للتحويل الآمن
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt();
+    return 0;
+  }
+
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    try {
+      if (value is String) return DateTime.parse(value);
+      if (value is DateTime) return value;
+    } catch (e) {
+      print('Error parsing datetime: $e');
+    }
+    return null;
+  }
+
+  static ProviderProfile? _parseProviderProfile(dynamic value) {
+    if (value == null) return null;
+    try {
+      if (value is Map<String, dynamic>) {
+        return ProviderProfile.fromJson(value);
+      }
+    } catch (e) {
+      print('Error parsing ProviderProfile: $e');
+    }
+    return null;
+  }
+
+  @override
+  String toString() {
+    return 'User(id: $id, name: $name, email: $email, userType: $userType, hasProfile: $hasProviderProfile)';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is User && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

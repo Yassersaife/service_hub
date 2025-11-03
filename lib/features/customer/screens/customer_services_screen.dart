@@ -92,11 +92,10 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
         final matchesCategory = _selectedCategory == null ||
             provider.categoryId?.toString() == _selectedCategory;
 
-        // فلتر الخدمة (التحقق من الخدمات المرتبطة بالمزود)
         bool matchesService = _selectedService == null;
-        if (_selectedService != null && provider.services != null) {
+        if (_selectedService != null && provider.services != null && provider.services!.isNotEmpty) {
           matchesService = provider.services!.any(
-                  (service) => service['id']?.toString() == _selectedService
+                  (service) => service.id.toString() == _selectedService
           );
         } else if (_selectedService == null) {
           matchesService = true;

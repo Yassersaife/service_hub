@@ -86,12 +86,11 @@ class Category {
     return Icons.category;
   }
 
-  // Color based on category name
   Color getPrimaryColor() {
     final lowerName = name.toLowerCase();
 
     if (lowerName.contains('تصوير') || lowerName.contains('photo')) {
-      return const Color(0xFF3B82F6); // Blue
+      return const Color(0xFFF4C016); // Blue
     } else if (lowerName.contains('تصميم') || lowerName.contains('design')) {
       return const Color(0xFF10B981); // Green
     } else if (lowerName.contains('طباعة') || lowerName.contains('print')) {
@@ -99,8 +98,11 @@ class Category {
     } else if (lowerName.contains('رقمية') || lowerName.contains('digital')) {
       return const Color(0xFFEF4444); // Red
     }
+    else if (lowerName.contains('برمجة') || lowerName.contains('developer')) {
+      return const Color(0xFF0A4E48); // Red
+    }
 
-    return const Color(0xFF6B7280); // Gray default
+    return const Color(0xFF3B82F6); // Gray default
   }
 
   LinearGradient getLinearGradient() {

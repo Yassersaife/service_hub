@@ -1,5 +1,9 @@
+// lib/features/service_provider/models/provider_profile.dart
+
+import 'package:Lumixy/models/service.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'portfolio_image.dart';
 
 class ProviderProfile {
   final int id;
@@ -10,8 +14,7 @@ class ProviderProfile {
   final String? description;
   final String? profileImage;
   final String? profileImageUrl;
-  final List<String>? portfolioImages;
-  final List<String>? portfolioImagesUrls;
+  final List<PortfolioImage>? portfolioImages;
   final String? workHours;
   final String? whatsappNumber;
   final bool isVerified;
@@ -23,7 +26,7 @@ class ProviderProfile {
 
   final Map<String, dynamic>? user;
   final Map<String, dynamic>? category;
-  final List<Map<String, dynamic>>? services;
+  final List<Service>? services;
 
   final int? servicesCount;
   final Map<String, dynamic>? status;
@@ -39,7 +42,6 @@ class ProviderProfile {
     this.profileImage,
     this.profileImageUrl,
     this.portfolioImages,
-    this.portfolioImagesUrls,
     this.workHours,
     this.whatsappNumber,
     this.isVerified = false,
@@ -56,193 +58,23 @@ class ProviderProfile {
     this.displayInfo,
   });
 
-  ProviderProfile copyWith({
-    int? id,
-    int? userId,
-    int? categoryId,
-    String? address,
-    String? city,
-    String? description,
-    String? profileImage,
-    String? profileImageUrl,
-    List<String>? portfolioImages,
-    List<String>? portfolioImagesUrls,
-    String? workHours,
-    String? whatsappNumber,
-    bool? isVerified,
-    bool? isFeatured,
-    bool? isComplete,
-    Map<String, dynamic>? socialMedia,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    Map<String, dynamic>? user,
-    Map<String, dynamic>? category,
-    List<Map<String, dynamic>>? services,
-    int? servicesCount,
-    Map<String, dynamic>? status,
-    Map<String, dynamic>? displayInfo,
-  }) {
-    return ProviderProfile(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      categoryId: categoryId ?? this.categoryId,
-      address: address ?? this.address,
-      city: city ?? this.city,
-      description: description ?? this.description,
-      profileImage: profileImage ?? this.profileImage,
-      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
-      portfolioImages: portfolioImages ?? this.portfolioImages,
-      portfolioImagesUrls: portfolioImagesUrls ?? this.portfolioImagesUrls,
-      workHours: workHours ?? this.workHours,
-      whatsappNumber: whatsappNumber ?? this.whatsappNumber,
-      isVerified: isVerified ?? this.isVerified,
-      isFeatured: isFeatured ?? this.isFeatured,
-      isComplete: isComplete ?? this.isComplete,
-      socialMedia: socialMedia ?? this.socialMedia,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      user: user ?? this.user,
-      category: category ?? this.category,
-      services: services ?? this.services,
-      servicesCount: servicesCount ?? this.servicesCount,
-      status: status ?? this.status,
-      displayInfo: displayInfo ?? this.displayInfo,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'user_id': userId,
-      'category_id': categoryId,
-      'address': address,
-      'city': city,
-      'description': description,
-      'profile_image': profileImage,
-      'profile_image_url': profileImageUrl,
-      'portfolio_images': portfolioImages,
-      'portfolio_images_urls': portfolioImagesUrls,
-      'work_hours': workHours,
-      'whatsapp_number': whatsappNumber,
-      'is_verified': isVerified,
-      'is_featured': isFeatured,
-      'is_complete': isComplete,
-      'social_media': socialMedia is Map ? jsonEncode(socialMedia) : socialMedia,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-      'user': user,
-      'category': category,
-      'services': services,
-      'services_count': servicesCount,
-      'status': status,
-      'display_info': displayInfo,
-    };
-  }
-
   factory ProviderProfile.fromJson(Map<String, dynamic> json) {
     try {
-      // معالجة portfolio_images - تحسين التعامل مع المصفوفات الفارغة
-      List<String>? portfolioImages;
-      if (json['portfolio_images'] != null) {
-        if (json['portfolio_images'] is List) {
-          final list = json['portfolio_images'] as List;
-          portfolioImages = list.isNotEmpty ? List<String>.from(list) : [];
-        } else if (json['portfolio_images'] is String && json['portfolio_images'].isNotEmpty) {
+      List<PortfolioImage>? portfolioImages;
+      if (json['portfolio_images'] != null && json['portfolio_images'] is List) {
+        final list = json['portfolio_images'] as List;
+        portfolioImages = list
+            .map((item) {
           try {
-            final decoded = jsonDecode(json['portfolio_images']);
-            if (decoded is List) {
-              portfolioImages = List<String>.from(decoded);
-            }
+            return PortfolioImage.fromJson(item as Map<String, dynamic>);
           } catch (e) {
-            print('Error decoding portfolio_images: $e');
-            portfolioImages = [];
+            print('خطأ في تحليل portfolio image: $e');
+            return null;
           }
-        } else {
-          portfolioImages = [];
-        }
-      }
-
-      // معالجة portfolio_images_urls - تحسين التعامل مع المصفوفات الفارغة
-      List<String>? portfolioImagesUrls;
-      if (json['portfolio_images_urls'] != null) {
-        if (json['portfolio_images_urls'] is List) {
-          final list = json['portfolio_images_urls'] as List;
-          portfolioImagesUrls = list.isNotEmpty ? List<String>.from(list) : [];
-        } else {
-          portfolioImagesUrls = [];
-        }
-      }
-
-      // معالجة social_media - تحسين التعامل مع النصوص والكائنات
-      Map<String, dynamic>? socialMedia;
-      if (json['social_media'] != null) {
-        if (json['social_media'] is Map) {
-          socialMedia = Map<String, dynamic>.from(json['social_media']);
-        } else if (json['social_media'] is String && json['social_media'].isNotEmpty) {
-          try {
-            final decoded = jsonDecode(json['social_media']);
-            if (decoded is Map) {
-              socialMedia = Map<String, dynamic>.from(decoded);
-            }
-          } catch (e) {
-            print('Error decoding social_media: $e');
-            // في حالة فشل التحويل، نحاول التعامل مع النص كما هو
-            socialMedia = {'raw': json['social_media']};
-          }
-        }
-      }
-
-      // معالجة services - تحسين التعامل مع المصفوفات الفارغة
-      List<Map<String, dynamic>>? services;
-      if (json['services'] != null && json['services'] is List) {
-        final list = json['services'] as List;
-        services = list.isNotEmpty
-            ? List<Map<String, dynamic>>.from(
-          list.map((service) => Map<String, dynamic>.from(service ?? {})),
-        )
-            : [];
-      }
-
-      // معالجة status - تحسين التعامل مع الكائنات
-      Map<String, dynamic>? status;
-      if (json['status'] != null && json['status'] is Map) {
-        status = Map<String, dynamic>.from(json['status']);
-      }
-
-      // معالجة display_info - تحسين التعامل مع الكائنات
-      Map<String, dynamic>? displayInfo;
-      if (json['display_info'] != null && json['display_info'] is Map) {
-        displayInfo = Map<String, dynamic>.from(json['display_info']);
-      }
-
-      // معالجة التواريخ مع التعامل مع التنسيقات المختلفة
-      DateTime createdAt;
-      DateTime updatedAt;
-
-      try {
-        createdAt = DateTime.parse(json['created_at']);
-      } catch (e) {
-        print('Error parsing created_at: $e');
-        createdAt = DateTime.now();
-      }
-
-      try {
-        updatedAt = DateTime.parse(json['updated_at']);
-      } catch (e) {
-        print('Error parsing updated_at: $e');
-        updatedAt = DateTime.now();
-      }
-
-      // معالجة user object
-      Map<String, dynamic>? user;
-      if (json['user'] != null && json['user'] is Map) {
-        user = Map<String, dynamic>.from(json['user']);
-      }
-
-      // معالجة category object
-      Map<String, dynamic>? category;
-      if (json['category'] != null && json['category'] is Map) {
-        category = Map<String, dynamic>.from(json['category']);
+        })
+            .where((item) => item != null)
+            .cast<PortfolioImage>()
+            .toList();
       }
 
       return ProviderProfile(
@@ -255,37 +87,32 @@ class ProviderProfile {
         profileImage: json['profile_image']?.toString(),
         profileImageUrl: json['profile_image_url']?.toString(),
         portfolioImages: portfolioImages,
-        portfolioImagesUrls: portfolioImagesUrls,
         workHours: json['work_hours']?.toString(),
         whatsappNumber: json['whatsapp_number']?.toString(),
         isVerified: _parseToBool(json['is_verified']),
         isFeatured: _parseToBool(json['is_featured']),
         isComplete: _parseToBool(json['is_complete']),
-        socialMedia: socialMedia,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-        user: user,
-        category: category,
-        services: services,
+        socialMedia: _parseSocialMedia(json['social_media']),
+        createdAt: _parseDateTime(json['created_at']),
+        updatedAt: _parseDateTime(json['updated_at']),
+        user: json['user'] != null ? Map<String, dynamic>.from(json['user']) : null,
+        category: json['category'] != null ? Map<String, dynamic>.from(json['category']) : null,
+        services: _parseServices(json['services']),
         servicesCount: json['services_count'] != null ? _parseToInt(json['services_count']) : null,
-        status: status,
-        displayInfo: displayInfo,
+        status: json['status'] != null ? Map<String, dynamic>.from(json['status']) : null,
+        displayInfo: json['display_info'] != null ? Map<String, dynamic>.from(json['display_info']) : null,
       );
     } catch (e, stackTrace) {
       print('Error in ProviderProfile.fromJson: $e');
       print('Stack trace: $stackTrace');
-      print('JSON data was: $json');
       rethrow;
     }
   }
 
-  // Helper methods للتحويل الآمن للأنواع
   static int _parseToInt(dynamic value) {
     if (value == null) return 0;
     if (value is int) return value;
-    if (value is String) {
-      return int.tryParse(value) ?? 0;
-    }
+    if (value is String) return int.tryParse(value) ?? 0;
     if (value is double) return value.toInt();
     return 0;
   }
@@ -293,14 +120,55 @@ class ProviderProfile {
   static bool _parseToBool(dynamic value) {
     if (value == null) return false;
     if (value is bool) return value;
-    if (value is String) {
-      return value.toLowerCase() == 'true' || value == '1';
-    }
+    if (value is String) return value.toLowerCase() == 'true' || value == '1';
     if (value is int) return value == 1;
     return false;
   }
 
-  // Helper getters
+  static Map<String, dynamic>? _parseSocialMedia(dynamic value) {
+    if (value == null) return null;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    if (value is String && value.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(value);
+        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      } catch (e) {
+        print('Error parsing social_media: $e');
+      }
+    }
+    return null;
+  }
+
+  static List<Service>? _parseServices(dynamic value) {
+    print(value);
+print("---=-=-=-=-=");
+    if (value == null) return null;
+    if (value is! List) return null;
+
+    return (value as List)
+        .map((item) {
+      try {
+        return Service.fromJson(item as Map<String, dynamic>);
+      } catch (e) {
+        print('خطأ في تحليل service: $e');
+        return null;
+      }
+    })
+        .where((item) => item != null)
+        .cast<Service>()
+        .toList();
+  }
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    try {
+      return DateTime.parse(value.toString());
+    } catch (e) {
+      print('Error parsing datetime: $e');
+      return DateTime.now();
+    }
+  }
+
   String? get userName => user?['name']?.toString() ?? displayInfo?['full_name']?.toString();
   String? get userEmail => user?['email']?.toString();
   String? get userPhone => user?['phone']?.toString() ?? displayInfo?['contact_phone']?.toString();
@@ -308,29 +176,38 @@ class ProviderProfile {
 
   String? get categoryName => category?['name']?.toString();
 
-  int get count => this.servicesCount ?? services?.length ?? 0;
-  bool get hasServices => count > 0;
-  bool get hasPortfolio => (portfolioImages?.isNotEmpty ?? false) ||
-      (portfolioImagesUrls?.isNotEmpty ?? false) ||
-      (displayInfo?['has_portfolio'] == true);
+  int get totalServices => servicesCount ?? services?.length ?? 0;
+  bool get hasServices => totalServices > 0;
+  bool get hasPortfolio => portfolioImages?.isNotEmpty ?? false;
 
-  List<String> get allPortfolioImages {
-    List<String> allImages = [];
-    if (portfolioImagesUrls != null && portfolioImagesUrls!.isNotEmpty) {
-      allImages.addAll(portfolioImagesUrls!);
-    }
-    return allImages;
+  List<String> get allPortfolioImageUrls {
+    if (portfolioImages == null || portfolioImages!.isEmpty) return [];
+    return portfolioImages!.map((img) => img.imageUrl).toList();
   }
 
-  // تحسين Social Media getters
+  int get portfolioCount => portfolioImages?.length ?? 0;
+
+  // ✨ Service Helper Methods
+  List<String> get serviceNames =>
+      services?.map((s) => s.name).toList() ?? [];
+
+  List<int> get serviceIds =>
+      services?.map((s) => s.id).toList() ?? [];
+
+  String get servicesDisplay =>
+      serviceNames.isEmpty ? 'لا توجد خدمات' : serviceNames.join(' • ');
+
+  bool hasService(int serviceId) =>
+      services?.any((s) => s.id == serviceId) ?? false;
+
+  List<Service> get activeServices =>
+      services?.where((s) => s.hasProviders).toList() ?? [];
+  // ✨ End Service Helper Methods
+
   Map<String, dynamic> get socialMediaData => socialMedia ?? {};
   String? get instagramHandle => socialMediaData['instagram']?.toString();
-  String? get facebookHandle => socialMediaData['facebook']?.toString();
   String? get websiteUrl => socialMediaData['website']?.toString();
-  String? get twitterHandle => socialMediaData['twitter']?.toString();
-  String? get linkedinHandle => socialMediaData['linkedin']?.toString();
 
-  // Status helpers - يستخدم status object أو القيم الأصلية
   String get statusText {
     final isCompleteStatus = status?['complete'] ?? isComplete;
     final isVerifiedStatus = status?['verified'] ?? isVerified;
@@ -367,12 +244,9 @@ class ProviderProfile {
     return Icons.person;
   }
 
-  // Display Info helpers
   String get location => displayInfo?['location']?.toString() ?? city;
   String? get whatsappContact => displayInfo?['whatsapp']?.toString() ?? whatsappNumber;
-  int get portfolioCount => (displayInfo?['portfolio_count'] as int?) ?? allPortfolioImages.length;
 
-  // Service-based helpers (fallback to category)
   IconData getServiceIcon() {
     final catName = categoryName?.toLowerCase() ?? '';
 
@@ -382,8 +256,6 @@ class ProviderProfile {
       return Icons.brush;
     } else if (catName.contains('طباعة') || catName.contains('print')) {
       return Icons.print;
-    } else if (catName.contains('رقمية') || catName.contains('digital')) {
-      return Icons.computer;
     } else if (catName.contains('برمجة') || catName.contains('تطوير')) {
       return Icons.code;
     } else if (catName.contains('موقع') || catName.contains('ويب')) {
@@ -402,8 +274,6 @@ class ProviderProfile {
       return const Color(0xFF10B981);
     } else if (catName.contains('طباعة') || catName.contains('print')) {
       return const Color(0xFF8B5CF6);
-    } else if (catName.contains('رقمية') || catName.contains('digital')) {
-      return const Color(0xFFEF4444);
     } else if (catName.contains('برمجة') || catName.contains('تطوير')) {
       return const Color(0xFF1D4ED8);
     } else if (catName.contains('موقع') || catName.contains('ويب')) {
@@ -416,79 +286,68 @@ class ProviderProfile {
   String getExperienceText() {
     final experienceYears = DateTime.now().difference(createdAt).inDays ~/ 365;
 
-    if (experienceYears == 0) {
-      return 'أقل من سنة';
-    } else if (experienceYears == 1) {
-      return 'سنة واحدة';
-    } else if (experienceYears == 2) {
-      return 'سنتان';
-    } else if (experienceYears <= 10) {
-      return '$experienceYears سنوات';
-    } else {
-      return 'أكثر من 10 سنوات';
-    }
-  }
-
-  // إضافة validator للبيانات المطلوبة
-  bool get isValidProfile {
-    return id > 0 &&
-        userId > 0 &&
-        city.isNotEmpty &&
-        userName?.isNotEmpty == true;
-  }
-
-  // Method خاصة لإرسال البيانات للـ API
-  Map<String, dynamic> toApiJson() {
-    return {
-      'user_id': userId,
-      'category_id': categoryId,
-      'address': address,
-      'city': city,
-      'description': description,
-      'work_hours': workHours,
-      'whatsapp_number': whatsappNumber,
-      'is_verified': isVerified,
-      'is_featured': isFeatured,
-      'is_complete': isComplete,
-      'social_media': socialMedia ?? {}, // كـ Map/Object
-    };
-  }
-
-  // Method لتحويل social media إلى format مناسب للـ API
-  Map<String, String> get socialMediaForApi {
-    if (socialMedia == null) return {};
-
-    Map<String, String> result = {};
-    socialMedia!.forEach((key, value) {
-      if (value != null) {
-        result[key] = value.toString();
-      }
-    });
-    return result;
-  }
-
-  // إضافة method لتحديد اكتمال البروفايل
-  double get completionPercentage {
-    int totalFields = 10;
-    int completedFields = 0;
-
-    if (userName?.isNotEmpty == true) completedFields++;
-    if (userEmail?.isNotEmpty == true) completedFields++;
-    if (userPhone?.isNotEmpty == true) completedFields++;
-    if (address?.isNotEmpty == true) completedFields++;
-    if (description?.isNotEmpty == true) completedFields++;
-    if (profileImage?.isNotEmpty == true) completedFields++;
-    if (workHours?.isNotEmpty == true) completedFields++;
-    if (whatsappNumber?.isNotEmpty == true) completedFields++;
-    if (categoryId != null) completedFields++;
-    if (socialMediaData.isNotEmpty) completedFields++;
-
-    return (completedFields / totalFields) * 100;
+    if (experienceYears == 0) return 'أقل من سنة';
+    if (experienceYears == 1) return 'سنة واحدة';
+    if (experienceYears == 2) return 'سنتان';
+    if (experienceYears <= 10) return '$experienceYears سنوات';
+    return 'أكثر من 10 سنوات';
   }
 
   @override
   String toString() {
-    return 'ProviderProfile(id: $id, userId: $userId, name: $userName, city: $city, isVerified: $isVerified, isFeatured: $isFeatured, isComplete: $isComplete)';
+    return 'ProviderProfile(id: $id, userId: $userId, name: $userName, city: $city)';
+  }
+
+  ProviderProfile copyWith({
+    int? id,
+    int? userId,
+    int? categoryId,
+    String? address,
+    String? city,
+    String? description,
+    String? profileImage,
+    String? profileImageUrl,
+    List<PortfolioImage>? portfolioImages,
+    String? workHours,
+    String? whatsappNumber,
+    bool? isVerified,
+    bool? isFeatured,
+    bool? isComplete,
+    Map<String, dynamic>? socialMedia,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Map<String, dynamic>? user,
+    Map<String, dynamic>? category,
+    List<Service>? services,
+    int? servicesCount,
+    Map<String, dynamic>? status,
+    Map<String, dynamic>? displayInfo,
+  }) {
+    return ProviderProfile(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      categoryId: categoryId ?? this.categoryId,
+      address: address ?? this.address,
+      city: city ?? this.city,
+      description: description ?? this.description,
+      profileImage: profileImage ?? this.profileImage,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      portfolioImages: portfolioImages ?? this.portfolioImages,
+      workHours: workHours ?? this.workHours,
+      whatsappNumber: whatsappNumber ?? this.whatsappNumber,
+      isVerified: isVerified ?? this.isVerified,
+      isFeatured: isFeatured ?? this.isFeatured,
+      isComplete: isComplete ?? this.isComplete,
+      socialMedia: socialMedia ?? this.socialMedia,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      user: user ?? this.user,
+      category: category ?? this.category,
+      services: services ?? this.services,
+      servicesCount: servicesCount ?? this.servicesCount,
+      status: status ?? this.status,
+      displayInfo: displayInfo ?? this.displayInfo,
+    );
   }
 
   @override

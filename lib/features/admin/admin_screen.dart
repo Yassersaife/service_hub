@@ -1,3 +1,5 @@
+import 'package:Lumixy/core/utils/app_initializer.dart';
+import 'package:Lumixy/features/customer/screens/customer_bottom_navigation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:Lumixy/features/admin/widgets/categories_tab.dart';
 import 'package:Lumixy/features/admin/widgets/providers_tab.dart';
@@ -44,8 +46,22 @@ class _AdminScreenState extends State<AdminScreen>
             fontSize: 20,
           ),
         ),
-        centerTitle: true,
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CustomerBottomNavigationScreen(),
+                ),
+              );
+            },
+            icon: const Icon(
+              Icons.home,
+              color: Colors.blue,
+            ),
+            tooltip: 'الصفحة الرئيسية',
+          ),
           IconButton(
             onPressed: _handleLogout,
             icon: const Icon(
@@ -115,10 +131,13 @@ class _AdminScreenState extends State<AdminScreen>
     if (shouldLogout == true) {
       await AuthService.logout();
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-        );
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AppInitializer(),
+            ),
+                (route) => false,
+          );
       }
     }
   }

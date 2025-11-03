@@ -12,6 +12,7 @@ class ApiUrls {
   static const String forgotPassword = '/auth/forgot-password';
   static const String verifyResetToken = '/auth/verify-reset-token';
   static const String resetPassword = '/auth/reset-password';
+
   // ====================
   // Categories URLs
   // ====================
@@ -27,52 +28,49 @@ class ApiUrls {
   // ====================
   static const String providers = '/providers';
   static const String featuredProviders = '/providers/featured';
-  static const String searchProviders = '/providers/search';
+  static const String newProviders = '/providers/new';
+
+  static const String myProvider = '/my-profile';
+
+  // ====================
+  // Portfolio Images URLs
+  // ====================
+  static String deletePortfolioImage(String imageId) {
+    return '/portfolio-images/$imageId';
+  }
 
   // ====================
   // Settings URLs
   // ====================
   static const String settings = '/settings';
+
   // ====================
   // Helper Methods
   // ====================
 
-  /// بناء رابط Category مع ID
   static String categoryById(String id) {
     return '/categories/$id';
   }
 
-  /// بناء رابط Service مع ID
   static String serviceById(String id) {
     return '/services/$id';
   }
 
-  /// بناء رابط Provider مع ID
   static String providerById(String id) {
     return '/providers/$id';
   }
 
-  /// بناء رابط المزودين حسب الخدمة
-  static String providersByService(String serviceId) {
-    return '/providers/service/$serviceId';
-  }
-
-  /// بناء رابط المزودين حسب الفئة
-  static String providersByCategory(String categoryId) {
-    return '/providers/category/$categoryId';
-  }
-
-  /// بناء رابط تحديث حالة التوثيق (admin only)
   static String updateProviderVerification(String providerId) {
-    return '/providers/$providerId/verification';
+    return '/providers/$providerId/verify';
   }
 
-  /// بناء رابط تحديث حالة المميز (admin only)
   static String updateProviderFeatured(String providerId) {
-    return '/providers/$providerId/featured';
+    return '/providers/$providerId/feature';
+  }
+  static String servicesByCategory(String categoryId) {
+    return '/categories/$categoryId/services';
   }
 
-  /// بناء رابط مع query parameters
   static String withParams(String baseUrl, Map<String, dynamic> params) {
     if (params.isEmpty) return baseUrl;
 
@@ -84,12 +82,18 @@ class ApiUrls {
     return queryString.isEmpty ? baseUrl : '$baseUrl?$queryString';
   }
 
-  /// بناء رابط البحث مع المعاملات
-  static String buildSearchUrl(Map<String, dynamic> searchParams) {
-    return withParams(searchProviders, searchParams);
+  static String buildProvidersUrl({
+    String? city,
+    String? categoryId,
+    String? isVerified,
+  }) {
+    Map<String, dynamic> params = {};
+    if (city != null) params['city'] = city;
+    if (categoryId != null) params['category_id'] = categoryId;
+    if (isVerified != null) params['is_verified'] = isVerified;
+    return withParams(providers, params);
   }
 
-  /// بناء رابط الخدمات مع فلترة
   static String buildServicesUrl({String? categoryId, String? search}) {
     Map<String, dynamic> params = {};
     if (categoryId != null) params['category_id'] = categoryId;
@@ -97,23 +101,19 @@ class ApiUrls {
     return withParams(services, params);
   }
 
-  /// بناء رابط البحث في المزودين حسب المدينة
   static String providersByCity(String city) {
-    return buildSearchUrl({'city': city});
+    return buildProvidersUrl(city: city);
   }
 
-  /// بناء رابط البحث في المزودين حسب الخدمة
-  static String providersSearchByService(String serviceId) {
-    return buildSearchUrl({'service_id': serviceId});
+  static String providersByCategory(String categoryId) {
+    return buildProvidersUrl(categoryId: categoryId);
   }
 
-  /// بناء رابط البحث في المزودين حسب الفئة
-  static String providersSearchByCategory(String categoryId) {
-    return buildSearchUrl({'category_id': categoryId});
+  static String verifiedProviders() {
+    return buildProvidersUrl(isVerified: '1');
   }
 
-  /// بناء رابط البحث العام في المزودين
-  static String providersGeneralSearch(String searchTerm) {
-    return buildSearchUrl({'search': searchTerm});
+  static String providersByCityAndCategory(String city, String categoryId) {
+    return buildProvidersUrl(city: city, categoryId: categoryId);
   }
 }

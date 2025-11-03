@@ -55,7 +55,6 @@ class _CategoriesTabState extends State<CategoriesTab> {
         padding: const EdgeInsets.all(16),
         itemCount: _categories.length + 1,
         itemBuilder: (context, index) {
-          // زر إضافة فئة جديدة
           if (index == _categories.length) {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),

@@ -1,4 +1,6 @@
+import 'package:Lumixy/core/utils/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:Lumixy/core/utils/app_initializer.dart';
 import 'package:Lumixy/features/auth/services/auth_service.dart';
@@ -10,6 +12,13 @@ void main() async {
 
   await AuthService.loadSavedData();
 
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: AppColors.primary,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+    ),
+  );
   runApp(const ProConnectApp());
 }
 
@@ -21,12 +30,19 @@ class ProConnectApp extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: MaterialApp(
-        title: 'ProConnect',
+        title: 'Lumixy',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
           useMaterial3: true,
           fontFamily: 'Cairo',
+          appBarTheme: const AppBarTheme(
+            systemOverlayStyle: SystemUiOverlayStyle(
+              statusBarColor:AppColors.primary,
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.dark,
+            ),
+          ),
         ),
         locale: const Locale('ar'),
         supportedLocales: const [

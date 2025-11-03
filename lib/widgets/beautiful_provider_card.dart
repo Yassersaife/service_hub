@@ -47,10 +47,8 @@ class BeautifulProviderCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // الجزء العلوي - الصورة والمعلومات الأساسية
               Row(
                 children: [
-                  // صورة البروفايل
                   Stack(
                     children: [
                       Container(
@@ -63,7 +61,6 @@ class BeautifulProviderCard extends StatelessWidget {
                         child: _buildProfileImage(),
                       ),
 
-                      // شارة الأفضل أو المميز
                       if (isTopProvider || provider.isFeatured)
                         Positioned(
                           top: -2,
@@ -71,12 +68,11 @@ class BeautifulProviderCard extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: provider.isFeatured ? Colors.purple : Colors.amber,
+                              color:  Colors.amber,
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
-                                  color: (provider.isFeatured ? Colors.purple : Colors.amber)
-                                      .withOpacity(0.4),
+                                  color: Colors.amber.withOpacity(0.4),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -89,32 +85,11 @@ class BeautifulProviderCard extends StatelessWidget {
                             ),
                           ),
                         ),
-
-                      // شارة التوثيق
-                      if (provider.isVerified)
-                        Positioned(
-                          bottom: -2,
-                          right: -2,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
-                            child: const Icon(
-                              Icons.verified,
-                              color: Colors.white,
-                              size: 12,
-                            ),
-                          ),
-                        ),
                     ],
                   ),
 
                   const SizedBox(width: 16),
 
-                  // معلومات المقدم
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,7 +100,7 @@ class BeautifulProviderCard extends StatelessWidget {
                               child: Text(
                                 provider.displayName,
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: Color(0xFF1A1A1A),
                                   height: 1.2,
@@ -140,27 +115,13 @@ class BeautifulProviderCard extends StatelessWidget {
 
                         const SizedBox(height: 8),
 
-                        // نوع الخدمة/الفئة
                         Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: provider.getServiceColor().withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                provider.getServiceIcon(),
-                                color: provider.getServiceColor(),
-                                size: 12,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
                             Flexible(
                               child: Text(
                                 provider.categoryName ?? 'غير محدد',
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: provider.getServiceColor(),
                                 ),
@@ -177,7 +138,6 @@ class BeautifulProviderCard extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // الجزء السفلي - الموقع والخدمات
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
@@ -299,16 +259,13 @@ class BeautifulProviderCard extends StatelessWidget {
     Color backgroundColor = Colors.grey;
     Color textColor = Colors.white;
 
-    if (provider.isVerified && provider.isFeatured) {
-      text = 'موثق ومميز';
-      backgroundColor = Colors.purple;
-    } else if (provider.isFeatured || isTopProvider) {
+    if (provider.isFeatured || isTopProvider) {
       text = 'مميز';
       backgroundColor = Colors.amber;
       textColor = Colors.black87;
     } else if (provider.isVerified) {
       text = 'موثق';
-      backgroundColor = Colors.green;
+      backgroundColor = Colors.blue;
     }
 
     if (text.isEmpty) return const SizedBox.shrink();

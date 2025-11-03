@@ -1,4 +1,6 @@
-// lib/features/service_provider/screens/provider_dashboard_screen.dart - Fixed
+// provider_dashboard_screen.dart
+import 'package:Lumixy/core/utils/app_initializer.dart';
+import 'package:Lumixy/features/customer/screens/customer_bottom_navigation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:Lumixy/core/utils/app_colors.dart';
 import 'package:Lumixy/features/auth/services/auth_service.dart';
@@ -32,12 +34,14 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       _loadProfile();
     });
   }
+
   void _loadPhone() async {
     final phone = await AuthService.getWhatsapp();
     setState(() {
       phoneNumber = phone ?? 'غير متوفر';
     });
   }
+
   Future<void> _loadProfile() async {
     if (!mounted) return;
 
@@ -49,45 +53,25 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     try {
       final user = AuthService.currentUser;
 
-      if (user != null) {
-        print('المستخدم الحالي: ${user['name']} (${user['id']})');
-
-        ProviderProfile? profile;
-
-        try {
-          profile = await _providerService.getMyProfile();
-          print('تم جلب الملف الشخصي من getMyProfile: ${profile?.displayName}');
-        } catch (e) {
-          print('فشل getMyProfile: $e');
-        }
-
-        if (profile == null) {
-          try {
-            final userIdString = user['id'].toString();
-            profile = await _providerService.getProfile(userIdString);
-            print('تم جلب الملف الشخصي من getProfile: ${profile?.displayName}');
-          } catch (e) {
-            print('فشل getProfile: $e');
-          }
-        }
-
-        if (mounted) {
-          setState(() {
-            _profile = profile;
-            _isLoading = false;
-          });
-        }
-      } else {
-        print('لا يوجد مستخدم مسجل دخول');
+      if (user == null) {
         if (mounted) {
           setState(() {
             _errorMessage = 'خطأ في بيانات المستخدم';
             _isLoading = false;
           });
         }
+        return;
+      }
+
+      final profile = await _providerService.getMyProfile();
+
+      if (mounted) {
+        setState(() {
+          _profile = profile;
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      print('خطأ في _loadProfile: $e');
       if (mounted) {
         setState(() {
           _errorMessage = null;
@@ -224,7 +208,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 40),
           _buildWelcomeHeader(user['name']?.toString() ?? 'المستخدم'),
           const SizedBox(height: 40),
@@ -474,21 +457,54 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           pinned: true,
           backgroundColor: Colors.transparent,
           flexibleSpace: Container(
+            alignment: Alignment.center,
             decoration: const BoxDecoration(
               gradient: AppColors.primaryGradient,
             ),
             child: FlexibleSpaceBar(
-              title: Text(
-                'مرحباً ${profile.displayName}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'مرحباً ${profile.displayName}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-              centerTitle: false,
+              centerTitle: true,
             ),
           ),
           actions: [
+            IconButton(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProviderProfileSetupScreen(
+                      existingProfile: _profile,
+                    ),
+                  ),
+                );
+
+                if (result == true) {
+                  await _loadProfile();
+                }
+              },
+              icon: const Icon(
+                Icons.edit,
+                color: Colors.white,
+              ),
+              tooltip: 'تعديل الملف الشخصي',
+            ),
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert, color: Colors.white),
               onSelected: (value) {
@@ -496,9 +512,27 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                   _handleLogout();
                 } else if (value == 'delete') {
                   _handleDeleteAccount();
+                } else if (value == 'home') {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CustomerBottomNavigationScreen(),
+                    ),
+                        (route) => false,
+                  );
                 }
               },
               itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'home',
+                  child: Row(
+                    children: [
+                      Icon(Icons.home, color: Color(0xFF64748B)),
+                      SizedBox(width: 12),
+                      Text('الصفحة الرئيسية'),
+                    ],
+                  ),
+                ),
                 const PopupMenuItem(
                   value: 'logout',
                   child: Row(
@@ -531,7 +565,7 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               const SizedBox(height: 20),
               _buildProfileCard(profile),
               const SizedBox(height: 20),
-              _buildEditProfileButton(),
+              _buildServiceProviderButton(context),
               const SizedBox(height: 20),
             ]),
           ),
@@ -539,7 +573,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       ],
     );
   }
-
   Widget _buildVerificationStatus(ProviderProfile profile) {
     if (profile.isVerified) {
       return Container(
@@ -840,79 +873,97 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     }
   }
 
-  Widget _buildEditProfileButton() {
+  Widget _buildServiceProviderButton(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ElevatedButton.icon(
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProviderProfileSetupScreen(
-                    existingProfile: _profile,
-                  ),
-                ),
-              );
-
-              if (result == true) {
-                await _loadProfile();
-              }
-            },
-            icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-            label: const Text(
-              'تعديل الملف الشخصي',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blueAccent,
-              shadowColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          ElevatedButton.icon(
-            onPressed: _isDeletingAccount ? null : _handleDeleteAccount,
-            icon: _isDeletingAccount
-                ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
-                : const Icon(Icons.delete_forever, color: Colors.white),
-            label: Text(
-              _isDeletingAccount ? 'جاري الحذف...' : 'حذف الحساب نهائياً',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CustomerBottomNavigationScreen(),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: const Icon(
+                    Icons.work,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+
+                const SizedBox(width: 20),
+
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'أبحث عن خدمات',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'تصفح واعثر على مقدمي الخدمات',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
-
   void _handleDeleteAccount() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -959,7 +1010,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const UserTypeScreen()),
+              MaterialPageRoute(
+                builder: (context) => const AppInitializer(),
+              ),
                   (route) => false,
             );
           }
@@ -993,7 +1046,6 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
   }
 
   void openWhatsApp(userName) async {
-
     final message = 'مرحباً، أنا $userName وأريد تفعيل حسابي كمقدم خدمة';
 
     final whatsappUrl =
@@ -1055,7 +1107,9 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+          MaterialPageRoute(
+            builder: (context) => const AppInitializer(),
+          ),
               (route) => false,
         );
       }

@@ -1,26 +1,27 @@
+// lib/features/service_provider/models/profile_setup_data.dart
+
+import 'package:Lumixy/models/service.dart';
+import 'portfolio_image.dart';
+
 class ProfileSetupData {
-  // المعلومات الأساسية
   String? selectedCategoryId;
   String? selectedCity;
   String address = '';
   String description = '';
   String workHours = '';
 
-  // معلومات التواصل
   String whatsappNumber = '';
   Map<String, String> socialMedia = {};
 
-  // الصور
   String? profileImagePath;
   List<String> portfolioImages = [];
+  List<PortfolioImage> existingPortfolioImages = [];
 
-  // التخصصات/الخدمات - إصلاح المشكلة
-  List<String> selectedServiceIds = [];
+  List<int> selectedServiceIds = [];
   List<String> selectedServiceNames = [];
 
   ProfileSetupData();
 
-  // Constructor لتحميل البيانات الموجودة - محسن
   ProfileSetupData.fromExistingProfile({
     String? categoryId,
     String? city,
@@ -30,8 +31,8 @@ class ProfileSetupData {
     String? existingWhatsapp,
     Map<String, dynamic>? existingSocialMedia,
     String? existingProfileImage,
-    List<String>? existingPortfolioImages,
-    List<Map<String, dynamic>>? existingServices,
+    List<PortfolioImage>? existingPortfolio,
+    List<Service>? existingServices,
   }) {
     selectedCategoryId = categoryId;
     selectedCity = city;
@@ -40,7 +41,6 @@ class ProfileSetupData {
     workHours = existingWorkHours ?? '';
     whatsappNumber = existingWhatsapp ?? '';
 
-    // إصلاح تحويل social media
     if (existingSocialMedia != null) {
       socialMedia = {};
       existingSocialMedia.forEach((key, value) {
@@ -51,72 +51,93 @@ class ProfileSetupData {
     }
 
     profileImagePath = existingProfileImage;
-    portfolioImages = List<String>.from(existingPortfolioImages ?? []);
 
-    // إصلاح تحميل التخصصات المحفوظة
+    if (existingPortfolio != null && existingPortfolio.isNotEmpty) {
+      existingPortfolioImages = List<PortfolioImage>.from(existingPortfolio);
+      print('تم تحميل ${existingPortfolioImages.length} صورة من المعرض');
+    }
+
+    // ✨ تحديث: استخدام Service objects مباشرة
     if (existingServices != null && existingServices.isNotEmpty) {
-      selectedServiceIds = [];
-      selectedServiceNames = [];
-
-      for (var service in existingServices) {
-        if (service['id'] != null && service['name'] != null) {
-          selectedServiceIds.add(service['id'].toString());
-          selectedServiceNames.add(service['name'].toString());
-        }
-      }
-
+      selectedServiceIds = existingServices.map((s) => s.id).toList();
+      selectedServiceNames = existingServices.map((s) => s.name).toList();
       print('تم تحميل التخصصات: $selectedServiceNames');
-      print('IDs: $selectedServiceIds');
     }
   }
 
-  // إضافة متغيرات للتحكم في حالة التحديث
-  bool get isUpdating => selectedServiceIds.isNotEmpty || portfolioImages.isNotEmpty;
-
-  // دالة لإضافة خدمة
-  void addService(String serviceId, String serviceName) {
-    if (!selectedServiceIds.contains(serviceId)) {
-      selectedServiceIds.add(serviceId);
-      selectedServiceNames.add(serviceName);
-    }
+  List<String> getAllPortfolioImagePaths() {
+    List<String> allPaths = [];
+    allPaths.addAll(existingPortfolioImages.map((img) => img.imageUrl));
+    allPaths.addAll(portfolioImages);
+    return allPaths;
   }
 
-  // دالة لحذف خدمة
-  void removeService(String serviceId) {
-    int index = selectedServiceIds.indexOf(serviceId);
-    if (index != -1) {
-      selectedServiceIds.removeAt(index);
-      if (index < selectedServiceNames.length) {
-        selectedServiceNames.removeAt(index);
-      }
-    }
+  void removeExistingPortfolioImage(int imageId) {
+    existingPortfolioImages.removeWhere((img) => img.id == imageId);
   }
 
-  // دالة لتحديث قائمة الخدمات
-  void updateServices(List<String> serviceIds, List<String> serviceNames) {
-    selectedServiceIds = List<String>.from(serviceIds);
-    selectedServiceNames = List<String>.from(serviceNames);
+  void removeNewPortfolioImage(String path) {
+    portfolioImages.remove(path);
   }
 
-  // التحقق من اكتمال البيانات المطلوبة
+  int get totalPortfolioCount =>
+      existingPortfolioImages.length + portfolioImages.length;
+
   bool get isBasicInfoComplete {
     return selectedCategoryId != null &&
         selectedCity != null &&
         description.isNotEmpty;
   }
 
-  // تنظيف البيانات الفارغة
+  // ✨ جديد: التحقق من اكتمال البيانات بشكل أفضل
+  bool get isServicesSelected => selectedServiceIds.isNotEmpty;
+
+  bool get hasPortfolioImages => totalPortfolioCount > 0;
+
+  // ✨ جديد: الحصول على service IDs كـ Strings للـ API
+  List<String> get serviceIdsAsStrings =>
+      selectedServiceIds.map((id) => id.toString()).toList();
+
   void cleanEmptyData() {
     if (address.trim().isEmpty) address = '';
     if (workHours.trim().isEmpty) workHours = '';
     if (whatsappNumber.trim().isEmpty) whatsappNumber = '';
 
-    // إزالة الروابط الفارغة من وسائل التواصل
     socialMedia.removeWhere((key, value) => value.trim().isEmpty);
-
-    // تنظيف قوائم الخدمات من القيم الفارغة
-    selectedServiceIds.removeWhere((id) => id.trim().isEmpty);
     selectedServiceNames.removeWhere((name) => name.trim().isEmpty);
+  }
+
+  // ✨ جديد: إضافة/إزالة خدمة
+  void addService(Service service) {
+    if (!selectedServiceIds.contains(service.id)) {
+      selectedServiceIds.add(service.id);
+      selectedServiceNames.add(service.name);
+    }
+  }
+
+  void removeService(int serviceId) {
+    final index = selectedServiceIds.indexOf(serviceId);
+    if (index != -1) {
+      selectedServiceIds.removeAt(index);
+      selectedServiceNames.removeAt(index);
+    }
+  }
+
+  void toggleService(Service service) {
+    if (selectedServiceIds.contains(service.id)) {
+      removeService(service.id);
+    } else {
+      addService(service);
+    }
+  }
+
+  bool isServiceSelected(int serviceId) {
+    return selectedServiceIds.contains(serviceId);
+  }
+
+  void clearServices() {
+    selectedServiceIds.clear();
+    selectedServiceNames.clear();
   }
 
   @override
@@ -124,10 +145,8 @@ class ProfileSetupData {
     return 'ProfileSetupData('
         'categoryId: $selectedCategoryId, '
         'city: $selectedCity, '
-        'hasDescription: ${description.isNotEmpty}, '
-        'servicesCount: ${selectedServiceIds.length}, '
         'services: $selectedServiceNames, '
-        'hasImages: ${portfolioImages.length}'
+        'portfolioCount: $totalPortfolioCount'
         ')';
   }
 }

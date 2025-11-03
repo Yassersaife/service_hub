@@ -1,3 +1,4 @@
+import 'package:Lumixy/features/service_provider/widgets/whatsapp_input_field.dart';
 import 'package:flutter/material.dart';
 import 'package:Lumixy/widgets/custom_text_field.dart';
 import '../models/profile_setup_data.dart';
@@ -129,13 +130,8 @@ class _ProfileSetupContactState extends State<ProfileSetupContact> {
           ),
 
           const SizedBox(height: 16),
-
-          CustomTextField(
-            controller: _whatsappController,
-            label: 'رقم الواتساب',
-            hint: '97********',
-            icon: Icons.phone,
-            keyboardType: TextInputType.phone,
+          WhatsappInputField(
+            initialNumber: widget.data.whatsappNumber,
             onChanged: (value) {
               widget.data.whatsappNumber = value;
               widget.onDataChanged();

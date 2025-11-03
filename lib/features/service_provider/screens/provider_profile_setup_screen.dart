@@ -1,8 +1,12 @@
+// lib/features/service_provider/screens/provider_profile_setup_screen.dart
+
+import 'package:Lumixy/models/service.dart';
 import 'package:flutter/material.dart';
 import 'package:Lumixy/core/utils/app_colors.dart';
 import 'package:Lumixy/features/auth/services/auth_service.dart';
 import 'package:Lumixy/features/service_provider/models/provider_profile.dart';
 import 'package:Lumixy/features/service_provider/models/profile_setup_data.dart';
+import 'package:Lumixy/features/service_provider/models/portfolio_image.dart';
 import 'package:Lumixy/features/service_provider/services/provider_service.dart';
 import 'package:Lumixy/features/service_provider/widgets/profile_progress_indicator.dart';
 import 'package:Lumixy/features/service_provider/widgets/profile_setup_basic_info.dart';
@@ -23,8 +27,10 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
   late TabController _tabController;
   final _providerService = ProviderService();
 
-  // Form data - shared between all steps
   late ProfileSetupData _data;
+
+  List<Service> _selectedServices = [];
+  List<Service> _availableServices = [];
 
   bool _isLoading = false;
   int _currentStep = 0;
@@ -53,9 +59,13 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
       existingWhatsapp: profile.whatsappNumber,
       existingSocialMedia: profile.socialMedia,
       existingProfileImage: profile.profileImageUrl ?? profile.profileImage,
-      existingPortfolioImages: profile.allPortfolioImages,
-      existingServices: profile.services, // إضافة التخصصات المحفوظة
+      existingPortfolio: profile.portfolioImages,
+      existingServices: profile.services, // ✅ الآن List<Service>
     );
+
+    if (profile.services != null) {
+      _selectedServices = List<Service>.from(profile.services!);
+    }
   }
 
   @override
@@ -94,11 +104,20 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
         children: [
           ProfileSetupBasicInfo(
             data: _data,
+            selectedServices: _selectedServices, // ✨ جديد
             onDataChanged: () => setState(() {}),
+            onServicesChanged: (services) { // ✨ جديد
+              setState(() {
+                _selectedServices = services;
+                _data.selectedServiceIds = services.map((s) => s.id).toList();
+                _data.selectedServiceNames = services.map((s) => s.name).toList();
+              });
+            },
           ),
           ProfileSetupPortfolio(
             data: _data,
             onDataChanged: () => setState(() {}),
+            onImageDeleted: _handleImageDeletion, // ✨ جديد
           ),
           ProfileSetupContact(
             data: _data,
@@ -108,6 +127,51 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
       ),
       bottomNavigationBar: _buildBottomNavigation(),
     );
+  }
+
+  // ✨ جديد: معالجة حذف الصور
+  Future<void> _handleImageDeletion(int imageId) async {
+    try {
+      setState(() => _isLoading = true);
+
+      final success = await _providerService.deletePortfolioImage(imageId);
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم حذف الصورة بنجاح'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // إزالة الصورة من البيانات المحلية
+        setState(() {
+          _data.removeExistingPortfolioImage(imageId);
+        });
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('فشل حذف الصورة'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ خطأ في حذف الصورة: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('حدث خطأ: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Widget _buildBottomNavigation() {
@@ -202,15 +266,22 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
   }
 
   void _nextStep() {
+    // ✨ تحسين: Validation أفضل
     if (_currentStep == 0) {
-      if (_data.selectedCategoryId == null ||
-          _data.selectedCity == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('يرجى ملء جميع الحقول المطلوبة'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+      // التحقق من البيانات الأساسية
+      if (_data.selectedCategoryId == null || _data.selectedCity == null) {
+        _showError('يرجى اختيار التصنيف والمدينة');
+        return;
+      }
+
+      if (_data.description.trim().isEmpty) {
+        _showError('يرجى إضافة وصف للملف الشخصي');
+        return;
+      }
+
+      // ✨ جديد: التحقق من اختيار خدمة واحدة على الأقل
+      if (_selectedServices.isEmpty) {
+        _showError('يرجى اختيار خدمة واحدة على الأقل');
         return;
       }
     }
@@ -239,70 +310,117 @@ class _ProviderProfileSetupScreenState extends State<ProviderProfileSetupScreen>
       final user = AuthService.currentUser!;
       final userId = user['id'] is int ? user['id'] : int.parse(user['id'].toString());
 
-      List<Map<String, dynamic>>? servicesData;
-      if (_data.selectedServiceIds.isNotEmpty) {
-        servicesData = _data.selectedServiceIds.asMap().entries.map((entry) {
-          final index = entry.key;
-          final serviceId = entry.value;
-          return {
-            'id': int.parse(serviceId),
-            'name': index < _data.selectedServiceNames.length
-                ? _data.selectedServiceNames[index]
-                : 'خدمة',
-          };
+      // ✨ تحديث: استخدام Service objects مباشرة
+      List<Service>? servicesData = _selectedServices.isNotEmpty
+          ? List<Service>.from(_selectedServices)
+          : null;
+
+      // ✨ تحسين: معالجة صور المعرض
+      List<PortfolioImage>? portfolioImagesData;
+
+      if (widget.existingProfile != null) {
+        // في حالة التحديث: الصور الموجودة + الصور الجديدة
+        portfolioImagesData = [];
+
+        // إضافة الصور الموجودة (لم يتم حذفها)
+        portfolioImagesData.addAll(_data.existingPortfolioImages);
+
+        // إضافة الصور الجديدة
+        for (var newImagePath in _data.portfolioImages) {
+          portfolioImagesData.add(PortfolioImage(
+            id: 0, // ID مؤقت للصور الجديدة
+            imagePath: newImagePath,
+            imageUrl: newImagePath,
+          ));
+        }
+
+      } else {
+        portfolioImagesData = _data.portfolioImages.map((path) {
+          return PortfolioImage(
+            id: 0,
+            imagePath: path,
+            imageUrl: path,
+          );
         }).toList();
       }
 
       final profile = ProviderProfile(
         id: widget.existingProfile?.id ?? 0,
         userId: userId,
-        categoryId: _data.selectedCategoryId != null ? int.parse(_data.selectedCategoryId!) : null,
+        categoryId: _data.selectedCategoryId != null
+            ? int.parse(_data.selectedCategoryId!)
+            : null,
         city: _data.selectedCity!,
         address: _data.address.isNotEmpty ? _data.address : null,
-        description: _data.description,
+        description: _data.description.isNotEmpty ? _data.description : null,
         profileImage: _data.profileImagePath,
-        portfolioImages: _data.portfolioImages,
+        portfolioImages: portfolioImagesData,
         workHours: _data.workHours.isNotEmpty ? _data.workHours : null,
-        socialMedia: _data.socialMedia,
+        socialMedia: _data.socialMedia.isNotEmpty ? _data.socialMedia : null,
         whatsappNumber: _data.whatsappNumber.isNotEmpty ? _data.whatsappNumber : null,
         isVerified: widget.existingProfile?.isVerified ?? false,
         isFeatured: widget.existingProfile?.isFeatured ?? false,
         isComplete: true,
         createdAt: widget.existingProfile?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
-        services: servicesData,
+        services: servicesData, // ✅ الآن List<Service>
       );
 
       final success = await _providerService.saveProfile(profile);
 
-      if (success) {
+      if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم حفظ الملف الشخصي بنجاح'),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(widget.existingProfile != null
+                    ? 'تم تحديث الملف الشخصي بنجاح'
+                    : 'تم إنشاء الملف الشخصي بنجاح'),
+              ],
+            ),
             backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
         Navigator.pop(context, true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('فشل في حفظ الملف الشخصي'),
-            backgroundColor: Colors.red,
-          ),
-        );
+      } else if (mounted) {
+        _showError('فشل في حفظ الملف الشخصي');
       }
     } catch (e) {
-      print('خطأ في حفظ الملف الشخصي: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('حدث خطأ: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      print('❌ خطأ في حفظ الملف الشخصي: $e');
+      if (mounted) {
+        _showError('حدث خطأ: ${e.toString()}');
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
   }
 }

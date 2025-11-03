@@ -40,11 +40,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       final categories = await ServicesApiService.getAllCategories();
       final topRated = await providerService.getFeaturedProviders();
       final allProviders = await providerService.getAllProviders();
+      final newProviders = await providerService.getNewProviders();
+
 
       setState(() {
         _serviceCategories = categories;
         _topProviders = topRated;
-        _newProviders = allProviders.take(3).toList();
+        _newProviders = newProviders.take(5).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -97,11 +99,6 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 child: SizedBox(height: 16),
               ),
 
-              // Ad Banner
-              SliverToBoxAdapter(
-                child: _buildAdBanner(),
-              ),
-
               const SliverToBoxAdapter(
                 child: SizedBox(height: 16),
               ),
@@ -120,7 +117,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 SliverToBoxAdapter(
                   child: _buildTopProvidersSection(),
                 ),
-
+              if (_newProviders.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _buildProvidersSection(),
+                ),
               // Bottom Spacing
               const SliverToBoxAdapter(
                 child: SizedBox(height: 100),
@@ -170,103 +170,6 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                 ],
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAdBanner() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      height: 170,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF6B6B).withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: 30,
-            top: 20,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.local_offer,
-                color: Colors.white,
-                size: 30,
-              ),
-            ),
-          ),
-          const Positioned(
-            left: 30,
-            top: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'عروض خاصة!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'خصم 20% على جميع الخدمات\nللعملاء الجدد',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: 20,
-            left: 20,
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AllProvidersScreen(featured: false),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'اطلب الآن',
-                  style: TextStyle(
-                    color: Color(0xFFFF6B6B),
-                    fontWeight: FontWeight.bold,
-                  ),
-              ),
-            ),
-           ),
           ),
         ],
       ),
@@ -446,6 +349,66 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             itemCount: _topProviders.length,
             itemBuilder: (context, index) {
               final provider = _topProviders[index];
+              return Container(
+                width: 300,
+                margin: const EdgeInsets.only(right: 15),
+                child: BeautifulProviderCard(
+                  provider: provider,
+                  isTopProvider: true,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+  Widget _buildProvidersSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'مزودو الخدمات',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AllProvidersScreen(featured: false),
+                    ),
+                  );
+                },
+                child: Text(
+                  'عرض الكل',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 180,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: _newProviders.length,
+            itemBuilder: (context, index) {
+              final provider = _newProviders[index];
               return Container(
                 width: 300,
                 margin: const EdgeInsets.only(right: 15),

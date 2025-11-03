@@ -243,25 +243,37 @@ class ServiceProviderCardGuest extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: profile.getServiceColor().withOpacity(0.1),
+                          color: service.getPrimaryColor().withOpacity(0.1),  // ✨ استخدام لون الخدمة
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: profile.getServiceColor().withOpacity(0.3),
+                            color: service.getPrimaryColor().withOpacity(0.3),  // ✨ استخدام لون الخدمة
                           ),
                         ),
-                        child: Text(
-                          service['name'] ?? 'خدمة',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: profile.getServiceColor(),
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              service.getServiceIcon(),
+                              size: 14,
+                              color: service.getPrimaryColor(),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              service.name,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: service.getPrimaryColor(),
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }).toList(),
                   ),
                 ),
-              ] else if (profile.description != null && profile.description!.isNotEmpty) ...[
+              ]
+              else if (profile.description != null && profile.description!.isNotEmpty) ...[
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),

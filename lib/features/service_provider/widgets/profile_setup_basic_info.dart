@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'package:Lumixy/core/utils/app_colors.dart';
-import 'package:Lumixy/core/network/api_client.dart';
 import 'package:Lumixy/models/category.dart';
 import 'package:Lumixy/models/service.dart';
 import 'package:Lumixy/widgets/custom_dropdown.dart';
-import 'package:Lumixy/widgets/custom_multiselect.dart';
 import 'package:Lumixy/widgets/custom_text_field.dart';
 import 'package:Lumixy/features/service_provider/models/profile_setup_data.dart';
+import 'package:Lumixy/features/service_provider/widgets/service_selector_widget.dart';
 import 'profile_step_header.dart';
 import 'package:Lumixy/services/services_api_service.dart';
 
 class ProfileSetupBasicInfo extends StatefulWidget {
   final ProfileSetupData data;
+  final List<Service> selectedServices; // ✨ جديد
   final VoidCallback onDataChanged;
+  final Function(List<Service>) onServicesChanged; // ✨ جديد
 
   const ProfileSetupBasicInfo({
     super.key,
     required this.data,
+    required this.selectedServices, // ✨ جديد
     required this.onDataChanged,
+    required this.onServicesChanged, // ✨ جديد
   });
 
   @override
@@ -32,12 +36,6 @@ class _ProfileSetupBasicInfoState extends State<ProfileSetupBasicInfo> {
 
   List<Category> _availableCategories = [];
   bool _loadingCategories = false;
-
-  List<Service> _availableServices = [];
-  List<String> _availableServiceNames = [];
-  List<String> _selectedServiceNames = [];
-  List<String> _selectedServiceIds = [];
-  bool _loadingServices = false;
 
   final List<String> _cities = [
     "رام الله","القدس","بيت لحم","الخليل","نابلس","جنين","طولكرم","قلقيلية",
@@ -56,9 +54,6 @@ class _ProfileSetupBasicInfoState extends State<ProfileSetupBasicInfo> {
     _descriptionController.text = widget.data.description;
     _workHoursController.text = widget.data.workHours;
     _addressController.text = widget.data.address;
-
-    _selectedServiceIds = widget.data.selectedServiceIds ?? [];
-    _selectedServiceNames = widget.data.selectedServiceNames ?? [];
   }
 
   @override
@@ -78,29 +73,10 @@ class _ProfileSetupBasicInfoState extends State<ProfileSetupBasicInfo> {
         _loadingCategories = false;
       });
     } catch (e) {
-      print('Error loading categories: $e');
+      print('❌ خطأ في تحميل الفئات: $e');
       setState(() {
         _availableCategories = [];
         _loadingCategories = false;
-      });
-    }
-  }
-
-  Future<void> _loadServicesByCategory(String categoryId) async {
-    setState(() => _loadingServices = true);
-    try {
-      final services = await ServicesApiService.getAllServices(categoryId: categoryId);
-      setState(() {
-        _availableServices = services;
-        _availableServiceNames = services.map((s) => s.name).toList();
-        _loadingServices = false;
-      });
-    } catch (e) {
-      print('Error loading services: $e');
-      setState(() {
-        _availableServices = [];
-        _availableServiceNames = [];
-        _loadingServices = false;
       });
     }
   }
@@ -128,7 +104,15 @@ class _ProfileSetupBasicInfoState extends State<ProfileSetupBasicInfo> {
 
           const SizedBox(height: 20),
 
-          _buildServicesMultiSelect(),
+          ServiceSelectorWidget(
+            categoryId: widget.data.selectedCategoryId != null
+                ? int.tryParse(widget.data.selectedCategoryId!)
+                : null,
+            selectedServices: widget.selectedServices,
+            onServicesChanged: widget.onServicesChanged,
+            minServices: 1,
+            maxServices: 10, // اختياري
+          ),
 
           const SizedBox(height: 20),
 
@@ -194,8 +178,21 @@ class _ProfileSetupBasicInfoState extends State<ProfileSetupBasicInfo> {
       children: [
         Row(
           children: [
-            const Text('فئة الخدمة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
-            const Text(' *', style: TextStyle(color: AppColors.error, fontSize: 16)),
+            const Text(
+              'فئة الخدمة',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151),
+              ),
+            ),
+            const Text(
+              ' *',
+              style: TextStyle(
+                color: AppColors.error,
+                fontSize: 16,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -203,53 +200,55 @@ class _ProfileSetupBasicInfoState extends State<ProfileSetupBasicInfo> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5E7EB), width: 2),
+            border: Border.all(
+              color: const Color(0xFFE5E7EB),
+              width: 2,
+            ),
           ),
           child: DropdownButtonFormField<String>(
             value: widget.data.selectedCategoryId,
             hint: _loadingCategories
-                ? const Row(children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)), SizedBox(width: 8), Text('جاري تحميل الفئات...')])
+                ? const Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 8),
+                Text('جاري تحميل الفئات...'),
+              ],
+            )
                 : const Text('اختر فئة خدمتك'),
-            decoration: const InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16)),
-            items: _loadingCategories ? [] : _availableCategories.map((c) => DropdownMenuItem(value: c.id.toString(), child: Text(c.name))).toList(),
-            onChanged: _loadingCategories ? null : (value) {
-              widget.data.selectedCategoryId = value;
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+            items: _loadingCategories
+                ? []
+                : _availableCategories
+                .map((c) => DropdownMenuItem(
+              value: c.id.toString(),
+              child: Text(c.name),
+            ))
+                .toList(),
+            onChanged: _loadingCategories
+                ? null
+                : (value) {
+              setState(() {
+                widget.data.selectedCategoryId = value;
+              });
               widget.onDataChanged();
+
+              // ✨ مسح الخدمات المختارة عند تغيير الـ category
               if (value != null) {
-                _loadServicesByCategory(value);
-                _selectedServiceNames = [];
-                _selectedServiceIds = [];
+                widget.onServicesChanged([]);
               }
             },
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildServicesMultiSelect() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _loadingServices
-            ? const Center(child: CircularProgressIndicator())
-            : CustomMultiSelect(
-          label: 'التخصصات',
-          items: _availableServiceNames,
-          selectedItems: _selectedServiceNames,
-          onSelectionChanged: (selectedNames) {
-            setState(() {
-              _selectedServiceNames = selectedNames;
-              _selectedServiceIds = _availableServices
-                  .where((s) => selectedNames.contains(s.name))
-                  .map((s) => s.id.toString())
-                  .toList();
-
-              widget.data.selectedServiceIds = _selectedServiceIds;
-              widget.data.selectedServiceNames = _selectedServiceNames;
-              widget.onDataChanged();
-            });
-          },
         ),
       ],
     );
@@ -259,7 +258,14 @@ class _ProfileSetupBasicInfoState extends State<ProfileSetupBasicInfo> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('صورة البروفايل', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+        const Text(
+          'صورة البروفايل',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF374151),
+          ),
+        ),
         const SizedBox(height: 12),
         Center(
           child: GestureDetector(
@@ -270,43 +276,125 @@ class _ProfileSetupBasicInfoState extends State<ProfileSetupBasicInfo> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade300, width: 2),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5))],
+                border: Border.all(
+                  color: Colors.grey.shade300,
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
               child: widget.data.profileImagePath != null
                   ? ClipRRect(
                 borderRadius: BorderRadius.circular(18),
-                child: widget.data.profileImagePath!.startsWith('http')
-                    ? Image.network(widget.data.profileImagePath!, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar())
-                    : Image.asset(widget.data.profileImagePath!, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar()),
+                child: _buildProfileImage(),
               )
                   : _buildDefaultAvatar(),
             ),
           ),
         ),
         const SizedBox(height: 8),
-        const Center(child: Text('اضغط لتغيير الصورة', style: TextStyle(fontSize: 12, color: Color(0xFF64748B)))),
+        const Center(
+          child: Text(
+            'اضغط لتغيير الصورة',
+            style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFF64748B),
+            ),
+          ),
+        ),
       ],
     );
+  }
+
+  // ✨ معالجة محسّنة لعرض الصورة
+  Widget _buildProfileImage() {
+    final imagePath = widget.data.profileImagePath!;
+
+    // صورة من الإنترنت
+    if (imagePath.startsWith('http')) {
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                  loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
+      );
+    }
+
+    // صورة محلية (من الجهاز)
+    try {
+      return Image.file(
+        File(imagePath),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
+      );
+    } catch (e) {
+      print('❌ خطأ في تحميل الصورة: $e');
+      return _buildDefaultAvatar();
+    }
   }
 
   Widget _buildDefaultAvatar() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.add_a_photo, color: Colors.grey.shade400, size: 40),
+        Icon(
+          Icons.add_a_photo,
+          color: Colors.grey.shade400,
+          size: 40,
+        ),
         const SizedBox(height: 8),
-        Text('أضف صورة', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+        Text(
+          'أضف صورة',
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+          ),
+        ),
       ],
     );
   }
 
-  void _pickProfileImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512, imageQuality: 80);
-    if (image != null) {
-      widget.data.profileImagePath = image.path;
-      widget.onDataChanged();
+  Future<void> _pickProfileImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          widget.data.profileImagePath = image.path;
+        });
+        widget.onDataChanged();
+      }
+    } catch (e) {
+      print('❌ خطأ في اختيار الصورة: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('فشل اختيار الصورة'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 }

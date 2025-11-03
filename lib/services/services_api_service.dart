@@ -5,10 +5,6 @@ import '../models/category.dart';
 import '../models/service.dart';
 
 class ServicesApiService {
-  // ====================
-  // Categories Methods
-  // ====================
-
   static Future<List<Category>> getAllCategories() async {
     try {
       final response = await ApiClient.get(ApiUrls.categories);
@@ -20,12 +16,10 @@ class ServicesApiService {
         return [];
       }
     } catch (e) {
-      print('Error getting categories from API: $e');
       return [];
     }
   }
 
-  /// جلب فئة محددة بالـ ID
   static Future<Category?> getCategoryById(String categoryId) async {
     try {
       final response = await ApiClient.get(ApiUrls.categoryById(categoryId));
@@ -36,14 +30,9 @@ class ServicesApiService {
         return null;
       }
     } catch (e) {
-      print('Error getting category by ID: $e');
       return null;
     }
   }
-
-  // ====================
-  // Services Methods
-  // ====================
 
   static Future<List<Service>> getAllServices({
     String? categoryId,
@@ -63,7 +52,6 @@ class ServicesApiService {
         return [];
       }
     } catch (e) {
-      print('Error getting services from API: $e');
       return [];
     }
   }
@@ -78,7 +66,6 @@ class ServicesApiService {
         return null;
       }
     } catch (e) {
-      print('Error getting service by ID: $e');
       return null;
     }
   }
@@ -87,7 +74,6 @@ class ServicesApiService {
     try {
       return await getAllServices(categoryId: categoryId);
     } catch (e) {
-      print('Error getting services by category: $e');
       return [];
     }
   }
@@ -96,19 +82,22 @@ class ServicesApiService {
     try {
       return await getAllServices(search: searchTerm);
     } catch (e) {
-      print('Error searching services: $e');
       return [];
     }
   }
 
-  // ====================
-  // Providers Methods
-  // ====================
-
-  /// جلب جميع مقدمي الخدمات
-  static Future<List<Map<String, dynamic>>> getAllProviders() async {
+  static Future<List<Map<String, dynamic>>> getAllProviders({
+    String? city,
+    String? categoryId,
+    String? isVerified,
+  }) async {
     try {
-      final response = await ApiClient.get(ApiUrls.providers);
+      final url = ApiUrls.buildProvidersUrl(
+        city: city,
+        categoryId: categoryId,
+        isVerified: isVerified,
+      );
+      final response = await ApiClient.get(url);
 
       if (response.success && response.data != null) {
         return List<Map<String, dynamic>>.from(response.data);
@@ -116,12 +105,10 @@ class ServicesApiService {
         return [];
       }
     } catch (e) {
-      print('Error getting providers: $e');
       return [];
     }
   }
 
-  /// جلب المزودين المميزين
   static Future<List<Map<String, dynamic>>> getFeaturedProviders() async {
     try {
       final response = await ApiClient.get(ApiUrls.featuredProviders);
@@ -132,12 +119,10 @@ class ServicesApiService {
         return [];
       }
     } catch (e) {
-      print('Error getting featured providers: $e');
       return [];
     }
   }
 
-  /// جلب مزود خدمة محدد
   static Future<Map<String, dynamic>?> getProviderById(String providerId) async {
     try {
       final response = await ApiClient.get(ApiUrls.providerById(providerId));
@@ -148,95 +133,50 @@ class ServicesApiService {
         return null;
       }
     } catch (e) {
-      print('Error getting provider by ID: $e');
       return null;
     }
   }
 
-  /// جلب المزودين حسب الخدمة
-  static Future<Map<String, dynamic>?> getProvidersByService(String serviceId) async {
-    try {
-      final response = await ApiClient.get(ApiUrls.providersByService(serviceId));
-
-      if (response.success && response.data != null) {
-        return response.data; // يحتوي على service و providers
-      } else {
-        return null;
-      }
-    } catch (e) {
-      print('Error getting providers by service: $e');
-      return null;
-    }
-  }
-
-  /// جلب المزودين حسب الفئة
   static Future<List<Map<String, dynamic>>> getProvidersByCategory(String categoryId) async {
     try {
-      final response = await ApiClient.get(ApiUrls.providersByCategory(categoryId));
-
-      if (response.success && response.data != null) {
-        return List<Map<String, dynamic>>.from(response.data);
-      } else {
-        return [];
-      }
+      return await getAllProviders(categoryId: categoryId);
     } catch (e) {
-      print('Error getting providers by category: $e');
       return [];
     }
   }
 
-  /// البحث في المزودين
-  static Future<List<Map<String, dynamic>>> searchProviders({
-    String? city,
-    String? serviceId,
-    String? categoryId,
-    String? searchTerm,
-  }) async {
+  static Future<List<Map<String, dynamic>>> getProvidersByCity(String city) async {
     try {
-      Map<String, dynamic> params = {};
-      if (city != null) params['city'] = city;
-      if (serviceId != null) params['service_id'] = serviceId;
-      if (categoryId != null) params['category_id'] = categoryId;
-      if (searchTerm != null) params['search'] = searchTerm;
-
-      final url = ApiUrls.buildSearchUrl(params);
-      final response = await ApiClient.get(url);
-
-      if (response.success && response.data != null) {
-        return List<Map<String, dynamic>>.from(response.data);
-      } else {
-        return [];
-      }
+      return await getAllProviders(city: city);
     } catch (e) {
-      print('Error searching providers: $e');
       return [];
     }
   }
 
-  // ====================
-  // Admin Methods (require authentication)
-  // ====================
+  static Future<List<Map<String, dynamic>>> getVerifiedProviders() async {
+    try {
+      return await getAllProviders(isVerified: '1');
+    } catch (e) {
+      return [];
+    }
+  }
 
-  /// إنشاء فئة جديدة
   static Future<ApiResponse> createCategory(String name) async {
     return await ApiClient.post(ApiUrls.categories, {
       'name': name,
     });
   }
 
-  /// تحديث فئة
   static Future<ApiResponse> updateCategory(String categoryId, String name) async {
     return await ApiClient.put(ApiUrls.categoryById(categoryId), {
       'name': name,
     });
   }
 
-  /// حذف فئة
   static Future<ApiResponse> deleteCategory(String categoryId) async {
     return await ApiClient.delete(ApiUrls.categoryById(categoryId));
   }
 
-  /// إنشاء خدمة جديدة
   static Future<ApiResponse> createService({
     required String categoryId,
     required String name,
@@ -247,7 +187,6 @@ class ServicesApiService {
     });
   }
 
-  /// تحديث خدمة
   static Future<ApiResponse> updateService({
     required String serviceId,
     required String categoryId,
@@ -259,12 +198,10 @@ class ServicesApiService {
     });
   }
 
-  /// حذف خدمة
   static Future<ApiResponse> deleteService(String serviceId) async {
     return await ApiClient.delete(ApiUrls.serviceById(serviceId));
   }
 
-  /// تحديث حالة توثيق المزود
   static Future<ApiResponse> updateProviderVerification({
     required String providerId,
     required bool isVerified,
@@ -275,7 +212,6 @@ class ServicesApiService {
     );
   }
 
-  /// تحديث حالة المميز للمزود
   static Future<ApiResponse> updateProviderFeatured({
     required String providerId,
     required bool isFeatured,
